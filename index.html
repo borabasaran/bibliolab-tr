@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --ink:#1B2A41; --ink-soft:#33415C; --paper:#EFF2F6; --card:#FFFFFF;
@@ -133,15 +134,16 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
     </div>
     <label for="oaMail">E-posta (OpenAlex "polite pool", isteğe bağlı)</label>
     <input type="text" id="oaMail" placeholder="ornek@anadolu.edu.tr">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" id="oaArt" checked style="width:auto"> Yalnızca makaleler (type:article) — proje evren tanımıyla uyumlu</label>
     <button class="btn" id="oaGo">OpenAlex'ten çek</button>
     <div class="status" id="oaStat" hidden></div>
   </div>
 
   <div class="card">
     <h3 style="margin-top:0">B — Dosya yükle</h3>
-    <p class="hint">Desteklenen biçimler: Scopus <b>.csv</b>, Scopus/WoS <b>.bib</b>, OpenAlex <b>.json</b>, TR Dizin arama servisi <b>.json</b> çıktısı.</p>
+    <p class="hint">Desteklenen biçimler: Scopus <b>.csv</b>, Scopus/WoS <b>.bib</b>, OpenAlex <b>.json</b>, TR Dizin arama servisi <b>.json</b> çıktısı, bursiyer/manuel veri tablosu <b>.xlsx</b> (sütunlar: baslik, yazarlar, yil, dergi, tur, anahtar_kelimeler, ozet, kurum, doi, tema).</p>
     <label for="fileIn">Dosya seç</label>
-    <input type="file" id="fileIn" accept=".csv,.bib,.json,.txt" multiple>
+    <input type="file" id="fileIn" accept=".csv,.bib,.json,.txt,.xlsx" multiple>
     <div class="status" id="fileStat" hidden></div>
   </div>
 
@@ -193,7 +195,15 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
       <div class="chartbox"><h4>En üretken 10 dergi</h4><canvas id="chJour"></canvas></div>
       <div class="chartbox"><h4>En sık 12 anahtar kelime</h4><canvas id="chKw"></canvas></div>
       <div class="chartbox"><h4>Dillere göre dağılım</h4><canvas id="chLang"></canvas></div>
+      <div class="chartbox"><h4>En üretken 10 kurum</h4><canvas id="chInst"></canvas></div>
+      <div class="chartbox"><h4>Ülkelere göre dağılım (coğrafi işbirliği)</h4><canvas id="chCountry"></canvas></div>
+      <div class="chartbox"><h4>Yayın türleri</h4><canvas id="chType"></canvas></div>
       <div class="chartbox" id="themeBox" style="display:none"><h4>LLM tematik sınıflandırma dağılımı</h4><canvas id="chTheme"></canvas></div>
+    </div>
+    <div class="chartbox"><h4>Anahtar kelime bulutu (WordCloud)</h4><canvas id="wcCanvas" style="width:100%" height="380"></canvas></div>
+    <div class="grid2">
+      <div class="chartbox"><h4>Dergi payları (TreeMap)</h4><canvas id="tmCanvas" style="width:100%" height="340"></canvas></div>
+      <div class="chartbox"><h4>Kaynak → Dergi akışı (Sankey)</h4><canvas id="skCanvas" style="width:100%" height="340"></canvas></div>
     </div>
     <h3>En çok atıf alan 15 yayın</h3>
     <div class="chartbox" style="overflow-x:auto"><table id="topTable"></table></div>
@@ -203,12 +213,14 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <!-- ============ AĞLAR ============ -->
 <section class="panel" id="p-ag">
   <h2>Ağlar</h2>
-  <p class="sub">Ortak yazarlık ve anahtar kelime birlikte-görülme ağları (en sık 30 düğüm; kenar eşiği 2).</p>
+  <p class="sub">Ortak yazarlık, anahtar kelime birlikte-görülme, bibliyografik eşleşme ve ortak atıf ağları. Atıf ağları yalnızca kaynakça verisi taşıyan OpenAlex kaynaklı kayıtlarla kurulabilir; TR Dizin/DergiPark kayıtları kaynakça içermez.</p>
   <div id="agEmpty" class="empty">Önce 1. sekmeden veri yükleyin.</div>
   <div id="agBody" style="display:none">
     <div class="chips">
       <button class="chip on" data-net="kw">Anahtar kelime ağı</button>
       <button class="chip" data-net="auth">Ortak yazarlık ağı</button>
+      <button class="chip" data-net="bc">Bibliyografik eşleşme</button>
+      <button class="chip" data-net="cc">Ortak atıf ağı</button>
     </div>
     <div style="margin-top:14px"><canvas class="net" id="netCanvas" height="560"></canvas></div>
     <h3>En güçlü 15 bağ</h3>
@@ -242,6 +254,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
       <button class="chip" data-p="yontem">Yöntem paragrafı taslağı</button>
       <button class="chip" data-p="tema">Tematik sentez</button>
       <button class="chip" data-p="bosluk">Araştırma boşlukları</button>
+      <button class="chip" data-p="karar">Karar destek raporu (pilot senaryo)</button>
     </div>
     <label for="llmPrompt">İstem (düzenlenebilir)</label>
     <textarea id="llmPrompt" placeholder="Bir hazır görev seçin veya kendi isteminizi yazın."></textarea>
@@ -274,8 +287,8 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
   <h2>Doğrulama</h2>
   <p class="sub">Yazılım çıktısını manuel oluşturulmuş Altın Standart veri setiyle karşılaştırır; kayıt eşleşmesi için precision, recall ve F1-score, anahtar kelime ve tema kodlaması için Jaccard örtüşmesi hesaplanır.</p>
   <div class="card kn">
-    <label for="goldIn">Altın Standart dosyası (CSV — sütunlar: baslik/title, yil/year; isteğe bağlı: doi, anahtar_kelimeler/keywords, tema/theme)</label>
-    <input type="file" id="goldIn" accept=".csv">
+    <label for="goldIn">Altın Standart dosyası (CSV veya XLSX — sütunlar: baslik/title, yil/year; isteğe bağlı: doi, anahtar_kelimeler/keywords, tema/theme)</label>
+    <input type="file" id="goldIn" accept=".csv,.xlsx">
     <label for="valTh">Bulanık başlık eşleşme eşiği (0–1)</label>
     <input type="number" id="valTh" value="0.90" step="0.01" min="0.5" max="1">
     <button class="btn" id="valGo">Karşılaştır</button>
@@ -351,6 +364,8 @@ function mapOA(w){
     countries: [...new Set((w.authorships||[]).flatMap(a=>a.countries||[]))],
     doi: norm(w.doi).replace('https://doi.org/',''),
     lang: norm(w.language),
+    type: norm(w.type),
+    refs: w.referenced_works||[],
     src: 'OpenAlex'
   };
 }
@@ -360,6 +375,7 @@ $('oaGo').addEventListener('click', async ()=>{
   if(!issn.length && !q){ setStatus('oaStat','ISSN veya arama terimi girin.','err'); return; }
   const f = [];
   if(issn.length) f.push('primary_location.source.issn:'+issn.join('|'));
+  if($('oaArt').checked) f.push('type:article');
   f.push(`from_publication_date:${$('oaY1').value}-01-01`,`to_publication_date:${$('oaY2').value}-12-31`);
   const max = Math.min(+$('oaMax').value||1000, 5000);
   const mail = norm($('oaMail').value);
@@ -415,9 +431,28 @@ function parseScopusCSV(rows){
     keywords:norm(r['Author Keywords']||'').split(';').map(norm).filter(Boolean),
     abstract:norm(r['Abstract']), cited:+r['Cited by']||0,
     insts:norm(r['Affiliations']||'').split(';').map(norm).filter(Boolean).slice(0,10),
-    countries:[], doi:norm(r['DOI']), lang:norm(r['Language of Original Document']), src:'Scopus CSV'
+    countries:[], doi:norm(r['DOI']), lang:norm(r['Language of Original Document']), type:norm(r['Document Type']).toLowerCase(), src:'Scopus CSV'
   })).filter(r=>r.title);
 }
+
+/* ================= Manuel/bursiyer Excel-CSV tablosu ================= */
+function mapManualRow(r){
+  const g=k=>norm(firstOf(r,k));
+  return {
+    title:g(['baslik','title','yayin_adi','Başlık','Title','Yayın Adı']),
+    authors:g(['yazarlar','authors','yazar','Yazarlar']).split(/[;,]/).map(norm).filter(Boolean),
+    year:+g(['yil','year','Yıl','Year'])||null,
+    journal:g(['dergi','journal','dergi_adi','Dergi']),
+    keywords:g(['anahtar_kelimeler','keywords','anahtar_sozcukler','Anahtar Kelimeler']).split(/[;,]/).map(norm).filter(Boolean),
+    abstract:g(['ozet','abstract','oz','Özet']),
+    cited:+g(['atif','cited','atif_sayisi'])||0,
+    insts:g(['kurum','kurumlar','institution','Kurum']).split(';').map(norm).filter(Boolean),
+    countries:['TR'], doi:g(['doi','DOI']), lang:g(['dil','language'])||'tr',
+    type:g(['tur','yayin_turu','type','Tür']).toLowerCase()||'article',
+    theme:g(['tema','theme','Tema'])||undefined, src:'Manuel tablo'
+  };
+}
+function looksManual(hdr){ const h=hdr.map(x=>nkey(x)); return ['baslik','yayin_adi','yazarlar','dergi','yil'].some(k=>h.includes(k)); }
 
 /* ================= TR Dizin JSON (esnek eşleyici) ================= */
 function firstOf(o, keys){ for(const k of keys){ if(o&&o[k]!=null&&o[k]!=='') return o[k]; } return null; }
@@ -436,7 +471,8 @@ function mapTR(o){
     journal: norm(firstOf(s,['journalName','journal','dergiAdi','source'])),
     keywords, abstract: norm(firstOf(s,['abstract','abstractTr','oz','ozet'])),
     cited:+firstOf(s,['citationCount','citedBy','atifSayisi'])||0,
-    insts:[], countries:['TR'], doi:norm(firstOf(s,['doi'])), lang:norm(firstOf(s,['language','dil']))||'tr', src:'TR Dizin'
+    insts:[], countries:['TR'], doi:norm(firstOf(s,['doi'])), lang:norm(firstOf(s,['language','dil']))||'tr',
+    type:norm(firstOf(s,['publicationType','yayinTuru','documentType','tur'])).toLowerCase()||'article', src:'TR Dizin'
   };
 }
 function extractTRList(j){
@@ -458,14 +494,24 @@ $('trGo').addEventListener('click',()=>{
 /* ================= Dosya yükleme ================= */
 $('fileIn').addEventListener('change', async ev=>{
   for(const file of ev.target.files){
-    const text = await file.text();
     const ext = file.name.split('.').pop().toLowerCase();
     try{
+      if(ext==='xlsx'){
+        const wb=XLSX.read(await file.arrayBuffer());
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+        if(!rows.length){ setStatus('fileStat',file.name+': boş sayfa.','err'); continue; }
+        const hdr=Object.keys(rows[0]);
+        const recs = looksManual(hdr) ? rows.map(mapManualRow) : parseScopusCSV(rows);
+        addRecords(recs.filter(r=>r.title),'fileStat',file.name);
+        continue;
+      }
+      const text = await file.text();
       if(ext==='bib'){ addRecords(parseBib(text),'fileStat',file.name); }
       else if(ext==='csv'){
         const p = Papa.parse(text,{header:true,skipEmptyLines:true});
         const hdr = p.meta.fields||[];
-        if(hdr.includes('display_name')||hdr.includes('id')&&hdr.includes('publication_year')){
+        if(looksManual(hdr)){ addRecords(p.data.map(mapManualRow).filter(r=>r.title),'fileStat',file.name); }
+        else if(hdr.includes('display_name')||hdr.includes('id')&&hdr.includes('publication_year')){
           addRecords(p.data.map(r=>({title:norm(r.display_name||r.title),authors:norm(r['authorships.author.display_name']||r.authors||'').split('|').map(norm).filter(Boolean),year:+(r.publication_year)||null,journal:norm(r['primary_location.source.display_name']||''),keywords:norm(r['keywords.display_name']||'').split('|').map(norm).filter(Boolean),abstract:'',cited:+r.cited_by_count||0,insts:[],countries:[],doi:norm(r.doi).replace('https://doi.org/',''),lang:norm(r.language),src:'OpenAlex CSV'})).filter(r=>r.title),'fileStat',file.name);
         } else addRecords(parseScopusCSV(p.data),'fileStat',file.name);
       }
@@ -599,13 +645,109 @@ function renderAnaliz(){
   hbar('chJour',journals.slice(0,10),TEAL);
   hbar('chKw',kws.slice(0,12),BRICK);
   mkChart('chLang',{type:'doughnut',data:{labels:langs.slice(0,6).map(l=>l.label),datasets:[{data:langs.slice(0,6).map(l=>l.n),backgroundColor:[INK,HL,TEAL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{plugins:{legend:{position:'right'}}}});
+  const insts=countMap(RECS.flatMap(r=>r.insts));
+  hbar('chInst',insts.slice(0,10),'#33415C');
+  const ctry=countMap(RECS.flatMap(r=>r.countries));
+  mkChart('chCountry',{type:'bar',data:{labels:ctry.slice(0,12).map(c=>c.label),datasets:[{data:ctry.slice(0,12).map(c=>c.n),backgroundColor:TEAL}]},options:{plugins:{legend:{display:false}}}});
+  const types=countMap(RECS.map(r=>r.type||'belirsiz'));
+  mkChart('chType',{type:'doughnut',data:{labels:types.slice(0,6).map(t=>t.label),datasets:[{data:types.slice(0,6).map(t=>t.n),backgroundColor:[TEAL,INK,HL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{plugins:{legend:{position:'right'}}}});
   const themes=countMap(RECS.map(r=>r.theme).filter(Boolean));
   $('themeBox').style.display=themes.length?'block':'none';
   if(themes.length) hbar('chTheme',themes.slice(0,10),TEAL);
+  drawWordCloud(kws.slice(0,40));
+  drawTreemap(journals.slice(0,12), RECS.length);
+  drawSankey();
 
   const top = [...RECS].sort((a,b)=>b.cited-a.cited).slice(0,15);
   $('topTable').innerHTML = '<tr><th>#</th><th>Başlık</th><th>Yıl</th><th>Dergi</th><th>Atıf</th><th>Kaynak</th></tr>'+
     top.map((r,i)=>`<tr><td class="num">${i+1}</td><td>${r.title}</td><td class="num">${r.year||''}</td><td>${r.journal}</td><td class="num">${r.cited}</td><td>${r.src}</td></tr>`).join('');
+}
+
+/* ================= EDA görselleri: WordCloud / TreeMap / Sankey ================= */
+function setupCanvas(id,h){ const cv=$(id); const W=cv.width=cv.clientWidth*2; const H=cv.height=h*2; const ctx=cv.getContext('2d'); ctx.clearRect(0,0,W,H); return {cv,ctx,W,H}; }
+function drawWordCloud(kws){
+  const {ctx,W,H}=setupCanvas('wcCanvas',380);
+  if(!kws.length){ ctx.fillStyle='#68738A'; ctx.font='26px IBM Plex Sans'; ctx.fillText('Anahtar kelime verisi yok.',30,60); return; }
+  const maxN=kws[0].n, minN=kws[kws.length-1].n;
+  const colors=[INK,TEAL,BRICK,'#33415C','#8A6D1C'];
+  const placed=[];
+  const collide=(x,y,w,h)=>x<6||y<6||x+w>W-6||y+h>H-6||placed.some(p=>x<p.x+p.w+8&&x+w+8>p.x&&y<p.y+p.h+6&&y+h+6>p.y);
+  kws.forEach((k,i)=>{
+    const fs=Math.round(20+44*((k.n-minN)/Math.max(1,maxN-minN)));
+    ctx.font=`600 ${fs}px IBM Plex Sans`;
+    const w=ctx.measureText(k.label).width, h=fs;
+    let ok=false,x=0,y=0;
+    for(let t=0;t<600&&!ok;t++){
+      const ang=t*0.35, rad=6*Math.sqrt(t);
+      x=W/2+rad*Math.cos(ang)*2.1-w/2; y=H/2+rad*Math.sin(ang)-h/2;
+      if(!collide(x,y,w,h)) ok=true;
+    }
+    if(!ok) return;
+    placed.push({x,y,w,h});
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.fillText(k.label,x,y+h*0.82);
+  });
+}
+function drawTreemap(journals,total){
+  const {ctx,W,H}=setupCanvas('tmCanvas',340);
+  if(!journals.length){ ctx.fillStyle='#68738A'; ctx.font='26px IBM Plex Sans'; ctx.fillText('Dergi verisi yok.',30,60); return; }
+  const other=total-journals.reduce((s,j)=>s+j.n,0);
+  const items=[...journals]; if(other>0) items.push({label:'Diğer',n:other});
+  const cols=[INK,'#33415C',TEAL,'#3E7D6C',BRICK,'#B86A5F','#8FA0BE','#5C6B8A','#8A6D1C','#C9A227','#68738A','#A9B2C3','#D7DDE7'];
+  // dilimleme (slice-dice) yerleşimi
+  let x=0,y=0,w=W,h=H,horiz=true,rem=items.reduce((s,i)=>s+i.n,0);
+  items.forEach((it,i)=>{
+    const frac=it.n/rem;
+    let rw,rh;
+    if(horiz){ rw=w*frac; rh=h; } else { rw=w; rh=h*frac; }
+    ctx.fillStyle=cols[i%cols.length]; ctx.fillRect(x+2,y+2,Math.max(rw-4,2),Math.max(rh-4,2));
+    if(rw>90&&rh>44){
+      ctx.fillStyle='#fff'; ctx.font='600 20px IBM Plex Sans';
+      const lb=it.label.length>22?it.label.slice(0,20)+'…':it.label;
+      ctx.fillText(lb,x+12,y+30); ctx.font='400 18px IBM Plex Mono'; ctx.fillText(it.n+' yayın',x+12,y+56);
+    }
+    if(horiz){ x+=rw; w-=rw; } else { y+=rh; h-=rh; }
+    rem-=it.n; horiz=!horiz;
+  });
+}
+function drawSankey(){
+  const {ctx,W,H}=setupCanvas('skCanvas',340);
+  const srcs=countMap(RECS.map(r=>r.src));
+  const jTop=countMap(RECS.map(r=>r.journal).filter(Boolean)).slice(0,7).map(j=>nkey(j.label));
+  const flows=new Map(); // 'src||journal' -> n
+  for(const r of RECS){
+    const j=jTop.includes(nkey(r.journal))?r.journal:'Diğer dergiler';
+    const k=r.src+'||'+j; flows.set(k,(flows.get(k)||0)+1);
+  }
+  const right=countMap(RECS.map(r=>jTop.includes(nkey(r.journal))?r.journal:'Diğer dergiler'));
+  const tot=RECS.length; if(!tot) return;
+  const colL=60, colR=W-380, bw=26, gap=14;
+  const lay=(arr,x)=>{ let y=10; const m=new Map();
+    for(const a of arr){ const h=Math.max(10,(H-20-gap*(arr.length-1))*a.n/tot); m.set(nkey(a.label),{y,h,label:a.label,n:a.n,x}); y+=h+gap; } return m; };
+  const L=lay(srcs,colL), R=lay(right,colR);
+  const used={l:new Map(),r:new Map()};
+  const cols=[INK,TEAL,BRICK,'#8A6D1C','#5C6B8A'];
+  let ci=0;
+  for(const [k,n] of [...flows.entries()].sort((a,b)=>b[1]-a[1])){
+    const [s,j]=k.split('||'); const l=L.get(nkey(s)), r=R.get(nkey(j)); if(!l||!r) continue;
+    const fh=Math.max(3,(H-20-gap*(srcs.length-1))*n/tot);
+    const ly=l.y+(used.l.get(nkey(s))||0), ry=r.y+(used.r.get(nkey(j))||0);
+    used.l.set(nkey(s),(used.l.get(nkey(s))||0)+fh); used.r.set(nkey(j),(used.r.get(nkey(j))||0)+fh);
+    const c=cols[ci++%cols.length];
+    ctx.globalAlpha=.35; ctx.fillStyle=c;
+    ctx.beginPath();
+    ctx.moveTo(colL+bw,ly);
+    ctx.bezierCurveTo((colL+colR)/2,ly,(colL+colR)/2,ry,colR,ry);
+    ctx.lineTo(colR,ry+fh);
+    ctx.bezierCurveTo((colL+colR)/2,ry+fh,(colL+colR)/2,ly+fh,colL+bw,ly+fh);
+    ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+  }
+  ctx.font='600 19px IBM Plex Sans';
+  for(const v of L.values()){ ctx.fillStyle=INK; ctx.fillRect(colL,v.y,bw,v.h); ctx.fillStyle='#1B2A41';
+    ctx.save(); ctx.translate(colL-10,v.y+v.h/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.fillText(v.label.slice(0,18),0,0); ctx.restore(); }
+  for(const v of R.values()){ ctx.fillStyle=TEAL; ctx.fillRect(colR,v.y,bw,v.h); ctx.fillStyle='#1B2A41'; ctx.textAlign='left';
+    ctx.fillText((v.label.length>28?v.label.slice(0,26)+'…':v.label)+' ('+v.n+')',colR+bw+10,v.y+Math.min(v.h/2+7,v.h+2)); }
+  ctx.textAlign='left';
 }
 
 /* ================= ağlar ================= */
@@ -625,12 +767,73 @@ function buildNet(field){
   const N=[...topSet.entries()].filter(([k])=>usedNodes.has(k)).map(([k,f])=>({id:k,label:f.label,n:f.n}));
   return {N,E};
 }
-function drawNet(){
+/* --- atıf ağları (yalnızca kaynakça verisi olan OpenAlex kayıtları) --- */
+function refDocs(){ return RECS.filter(r=>r.refs&&r.refs.length); }
+function shortDoc(r){ return (r.title.length>34?r.title.slice(0,32)+'…':r.title)+' ('+(r.year||'?')+')'; }
+function buildBC(){ // bibliyografik eşleşme: ortak kaynakça paylaşan yayınlar
+  const docs=refDocs().sort((a,b)=>b.refs.length-a.refs.length).slice(0,30);
+  const sets=docs.map(d=>new Set(d.refs));
+  const E=[];
+  for(let i=0;i<docs.length;i++) for(let j=i+1;j<docs.length;j++){
+    let w=0; for(const x of sets[i]) if(sets[j].has(x)) w++;
+    if(w>=1) E.push({a:'d'+i,b:'d'+j,w});
+  }
+  const E2=E.filter(e=>e.w>=2).length>=3?E.filter(e=>e.w>=2):E;
+  const used=new Set(E2.flatMap(e=>[e.a,e.b]));
+  const N=docs.map((d,i)=>({id:'d'+i,label:shortDoc(d),n:d.refs.length})).filter(n=>used.has(n.id));
+  return {N,E:E2};
+}
+const REFLABELS=new Map(); // OpenAlex ID -> başlık
+async function resolveRefLabels(ids){
+  const need=ids.filter(id=>!REFLABELS.has(id));
+  for(let s=0;s<need.length;s+=50){
+    const batch=need.slice(s,s+50).map(id=>id.replace('https://openalex.org/',''));
+    try{
+      const res=await fetch('https://api.openalex.org/works?filter=openalex_id:'+batch.join('|')+'&per-page=50&select=id,display_name,publication_year');
+      const j=await res.json();
+      for(const w of (j.results||[])) REFLABELS.set(w.id,(w.display_name||'').slice(0,34)+' ('+(w.publication_year||'?')+')');
+    }catch(e){}
+    for(const id of need) if(!REFLABELS.has('https://openalex.org/'+id)&&!REFLABELS.has(id)) REFLABELS.set(id,id.split('/').pop());
+  }
+}
+async function buildCC(){ // ortak atıf: aynı kaynakçalarda birlikte anılan referanslar
+  const docs=refDocs();
+  const freq=new Map();
+  for(const d of docs) for(const x of new Set(d.refs)) freq.set(x,(freq.get(x)||0)+1);
+  const top=[...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,30);
+  const topSet=new Set(top.map(t=>t[0]));
+  const edges=new Map();
+  for(const d of docs){
+    const ks=[...new Set(d.refs)].filter(x=>topSet.has(x)).sort();
+    for(let i=0;i<ks.length;i++) for(let j=i+1;j<ks.length;j++){
+      const k=ks[i]+'||'+ks[j]; edges.set(k,(edges.get(k)||0)+1);
+    }
+  }
+  const E=[...edges.entries()].filter(([,w])=>w>=2).map(([k,w])=>{const [a,b]=k.split('||');return{a,b,w};});
+  const used=new Set(E.flatMap(e=>[e.a,e.b]));
+  const ids=top.map(t=>t[0]).filter(id=>used.has(id));
+  await resolveRefLabels(ids);
+  const N=top.filter(([id])=>used.has(id)).map(([id,n])=>({id,label:REFLABELS.get(id)||id.split('/').pop(),n}));
+  return {N,E};
+}
+
+async function drawNet(){
   const cv=$('netCanvas'); const ctx=cv.getContext('2d');
   const W=cv.width=cv.clientWidth*2; const H=cv.height=560*2; ctx.scale(1,1);
   ctx.clearRect(0,0,W,H);
-  const {N,E}=buildNet(curNet);
-  if(!N.length){ ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans'; ctx.fillText('Ağ kurmak için yeterli ortak görünüm yok (eşik: 2).',40,80); $('edgeTable').innerHTML=''; return; }
+  let net;
+  if(curNet==='bc'||curNet==='cc'){
+    if(!refDocs().length){
+      ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans';
+      ctx.fillText('Atıf ağları için kaynakça verisi gerekir — OpenAlex sekmesinden veri çekin.',40,80);
+      $('edgeTable').innerHTML=''; return;
+    }
+    if(curNet==='cc'){ ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans'; ctx.fillText('Referans başlıkları OpenAlex üzerinden çözümleniyor…',40,80); }
+    net = curNet==='bc'?buildBC():await buildCC();
+    ctx.clearRect(0,0,W,H);
+  } else net = buildNet(curNet);
+  const {N,E}=net;
+  if(!N.length){ ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans'; ctx.fillText('Ağ kurmak için yeterli ortak görünüm yok.',40,80); $('edgeTable').innerHTML=''; return; }
   const pos=new Map(N.map((n,i)=>[n.id,{x:W/2+Math.cos(i/N.length*6.283)*W/3.2,y:H/2+Math.sin(i/N.length*6.283)*H/3.2,vx:0,vy:0}]));
   for(let it=0; it<260; it++){
     for(const a of N) for(const b of N){ if(a===b) continue;
@@ -649,7 +852,7 @@ function drawNet(){
     ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke(); }
   const maxN=Math.max(...N.map(n=>n.n));
   for(const n of N){ const p=pos.get(n.id); const r=10+26*n.n/maxN;
-    ctx.fillStyle=curNet==='kw'?'#A44A3F':'#2E6E5E'; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
+    ctx.fillStyle={kw:'#A44A3F',auth:'#2E6E5E',bc:'#1B2A41',cc:'#8A6D1C'}[curNet]||'#2E6E5E'; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
     ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
     ctx.fillStyle='#1B2A41'; ctx.font='600 22px IBM Plex Sans';
     const lb=n.label.length>26?n.label.slice(0,24)+'…':n.label;
@@ -670,7 +873,8 @@ const PROMPTS={
   yorum:'Aşağıdaki bibliyometrik analiz özetini bir akademik makalenin bulgular ve tartışma bölümüne uygun, ölçülü ve kanıta dayalı bir dille Türkçe yorumla. Aşırı genelleme yapma; verinin kapsam sınırlarını belirt.',
   yontem:'Aşağıdaki korpus bilgilerine dayanarak, bir makalenin yöntem bölümü için veri kaynağını, kapsamı, tarama ölçütlerini ve analiz birimlerini tanımlayan 2 paragraflık akademik Türkçe taslak yaz. Kaynakça verisi bulunmadığında atıf-ağı analizlerinin yapılamadığını sınırlılık olarak ekle.',
   tema:'Aşağıdaki anahtar kelime dağılımı ve örnek özetlerden hareketle korpusun ana temalarını 4-6 başlık altında sentezle; her tema için kısa gerekçe ve temsilci terimleri ver. Türkçe yaz.',
-  bosluk:'Aşağıdaki bibliyometrik görünüme dayanarak bu alanda az çalışılmış görünen konuları ve olası araştırma boşluklarını Türkçe listele; her öneri için veriden hangi işarete dayandığını belirt. Spekülatif olduğun yerleri açıkça işaretle.'
+  bosluk:'Aşağıdaki bibliyometrik görünüme dayanarak bu alanda az çalışılmış görünen konuları ve olası araştırma boşluklarını Türkçe listele; her öneri için veriden hangi işarete dayandığını belirt. Spekülatif olduğun yerleri açıkça işaretle.',
+  karar:'Pilot Karar Senaryosu: Aşağıdaki bibliyometrik korpus özetine dayanarak bir bölüm/birim stratejik planına girdi olacak, veri temelli bir KARAR DESTEK RAPORU (politika bilgilendirme notu) hazırla. Yapı: (1) Mevcut durum özeti, (2) Güçlü üretim alanları, (3) Zayıf/boş alanlar, (4) İşbirliği yapısına ilişkin gözlemler, (5) 3-5 somut, uygulanabilir öneri. Her tespitte hangi veriye dayandığını parantez içinde belirt; verinin kapsam sınırlarını raporun sonunda tek paragrafta açıkla. Türkçe ve kurumsal bir dille yaz.'
 };
 document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ $('llmPrompt').value=PROMPTS[b.dataset.p]; }));
 $('llmKey').value = localStorage.getItem('bl_key')||'';
@@ -788,7 +992,14 @@ $('chatClear').addEventListener('click',()=>{ CHAT=[]; $('chatLog').innerHTML=''
 let GOLD=[];
 $('goldIn').addEventListener('change', async ev=>{
   const f=ev.target.files[0]; if(!f) return;
-  const p=Papa.parse(await f.text(),{header:true,skipEmptyLines:true});
+  let rows;
+  if(f.name.toLowerCase().endsWith('.xlsx')){
+    const wb=XLSX.read(await f.arrayBuffer());
+    rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  } else {
+    rows=Papa.parse(await f.text(),{header:true,skipEmptyLines:true}).data;
+  }
+  const p={data:rows};
   const g=k=>r=>norm(firstOf(r,k));
   GOLD=p.data.map(r=>({
     title:g(['baslik','title','Başlık','Title','yayin_adi'])(r),
@@ -870,7 +1081,7 @@ $('llmGo').addEventListener('click', async ()=>{
 function dl(name,content,type){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type})); a.download=name; a.click(); }
 $('expCsv').addEventListener('click',()=>{
   if(!RECS.length) return;
-  const rows=RECS.map(r=>({baslik:r.title,yazarlar:r.authors.join('; '),yil:r.year,dergi:r.journal,
+  const rows=RECS.map(r=>({baslik:r.title,yazarlar:r.authors.join('; '),yil:r.year,dergi:r.journal,tur:r.type||'',
     anahtar_kelimeler:r.keywords.join('; '),ozet:r.abstract,atif:r.cited,kurumlar:r.insts.join('; '),
     ulkeler:r.countries.join('; '),doi:r.doi,dil:r.lang,tema:r.theme||'',kaynak:r.src}));
   dl('bibliolab_korpus.csv','\ufeff'+Papa.unparse(rows),'text/csv;charset=utf-8');
