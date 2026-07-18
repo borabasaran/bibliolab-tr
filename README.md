@@ -4,18 +4,18 @@ Tarayıcıda çalışan, sunucusuz bibliyometrik analiz platformu. GitHub Pages 
 
 ## Özellikler
 
-- **Veri kaynakları:** OpenAlex API (ISSN/arama/yıl filtreli, sayfalı çekim), Scopus `.csv`, Scopus/WoS `.bib`, OpenAlex `.json`/`.csv`, TR Dizin arama servisi JSON çıktısı, DergiPark OAI-PMH hasadı (Dublin Core).
+- **Veri kaynakları:** OpenAlex API (ISSN/arama/yıl filtreli, "yalnızca makale" seçeneği ve kaynakça verisiyle sayfalı çekim), Scopus `.csv`, Scopus/WoS `.bib`, OpenAlex `.json`/`.csv`, TR Dizin arama servisi JSON çıktısı, DergiPark OAI-PMH hasadı (Dublin Core), bursiyer/manuel veri tablosu `.xlsx`/`.csv` (baslik, yazarlar, yil, dergi, tur, anahtar_kelimeler, ozet, kurum, doi, tema sütunları).
 - **Veri sağlığı (health check):** Alan doluluk oranları (başlık, yazar, yıl, özet, DOI vb.) ve karakter kodlama sorunu taraması; %70 altı alanlar işaretlenir.
 - **Mükerrer temizleme:** Birebir DOI/başlık ayıklamaya ek olarak bulanık (fuzzy, Levenshtein tabanlı, eşik 0.92) yinelenen taraması; kaldırılan çiftler raporlanır.
-- **Analiz:** EDA kartları (yayın, yazar, dergi, atıf, işbirliği endeksi), yıllara göre yayın/atıf, en üretken yazar/dergi, anahtar kelime, dil ve tema dağılımları, en çok atıf alan yayınlar tablosu.
-- **Ağlar:** Anahtar kelime birlikte-görülme ve ortak yazarlık ağları (kuvvet yönelimli yerleşim, en sık 30 düğüm, kenar eşiği 2).
-- **LLM katmanı:** Claude (Anthropic), Gemini veya OpenAI-uyumlu uç nokta (ChatGPT, DeepSeek vb.) ile: tek seferlik görevler (bulgu yorumlama, yöntem paragrafı, tematik sentez, araştırma boşlukları), **otomatik tematik sınıflandırma** (kayıtlara tema etiketi yazılır) ve **korpusla çok turlu doğal dilde sohbet**. Anahtar `localStorage`'da yerel tutulur.
-- **Doğrulama modülü:** Manuel "Altın Standart" CSV ile karşılaştırma — DOI + bulanık başlık eşleşmesi üzerinden **precision, recall, F1-score**; eşleşen çiftlerde anahtar kelime Jaccard örtüşmesi ve tema uyuşma oranı; FN/FP listeleri ve indirilebilir doğrulama raporu.
-- **Dışa aktarım:** Normalleştirilmiş korpus CSV (UTF-8 BOM'lu, Excel uyumlu, tema sütunu dahil) ve JSON.
+- **Analiz:** EDA kartları, yıllara göre yayın/atıf, en üretken yazar/dergi/kurum, anahtar kelime, dil, ülke, yayın türü ve tema dağılımları, en çok atıf alan yayınlar tablosu; ayrıca **WordCloud**, **TreeMap** (dergi payları) ve **Sankey** (kaynak → dergi akışı) görselleri.
+- **Ağlar:** Anahtar kelime birlikte-görülme, ortak yazarlık, **bibliyografik eşleşme** ve **ortak atıf** ağları (atıf ağları yalnızca kaynakça verisi taşıyan OpenAlex kayıtlarıyla kurulur; ortak atıf düğümlerinin başlıkları OpenAlex'ten çözümlenir).
+- **LLM katmanı:** Claude (Anthropic), Gemini veya OpenAI-uyumlu uç nokta (ChatGPT, DeepSeek vb.) ile: tek seferlik görevler (bulgu yorumlama, yöntem paragrafı, tematik sentez, araştırma boşlukları, **Pilot Karar Senaryosu karar destek raporu**), **otomatik tematik sınıflandırma** (kayıtlara tema etiketi yazılır) ve **korpusla çok turlu doğal dilde sohbet**. Anahtar `localStorage`'da yerel tutulur.
+- **Doğrulama modülü:** Manuel "Altın Standart" CSV/XLSX ile karşılaştırma — DOI + bulanık başlık eşleşmesi üzerinden **precision, recall, F1-score**; eşleşen çiftlerde anahtar kelime Jaccard örtüşmesi ve tema uyuşma oranı; FN/FP listeleri ve indirilebilir doğrulama raporu.
+- **Dışa aktarım:** Normalleştirilmiş korpus CSV (UTF-8 BOM'lu, Excel uyumlu; tür ve tema sütunları dahil) ve JSON.
 
-## Doğrulama modülü — Altın Standart CSV biçimi
+## Doğrulama modülü — Altın Standart dosya biçimi
 
-Zorunlu sütunlar: `baslik` (veya `title`), `yil` (veya `year`). İsteğe bağlı: `doi`, `anahtar_kelimeler`/`keywords` (noktalı virgülle ayrık), `tema`/`theme`. Eşleşme önce DOI ile, sonra ±1 yıl toleranslı bulanık başlık benzerliğiyle (ayarlanabilir eşik, varsayılan 0.90) yapılır.
+CSV veya XLSX. Zorunlu sütunlar: `baslik` (veya `title`), `yil` (veya `year`). İsteğe bağlı: `doi`, `anahtar_kelimeler`/`keywords` (noktalı virgülle ayrık), `tema`/`theme`. Eşleşme önce DOI ile, sonra ±1 yıl toleranslı bulanık başlık benzerliğiyle (ayarlanabilir eşik, varsayılan 0.90) yapılır.
 
 ## Kurulum (GitHub Pages)
 
