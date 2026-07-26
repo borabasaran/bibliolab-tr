@@ -64,6 +64,13 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--hl);outline-offs
 .status{font-family:var(--mono);font-size:13px;margin-top:12px;padding:10px 12px;border-radius:6px;background:var(--paper);border:1px dashed var(--line);white-space:pre-wrap}
 .status.ok{border-color:var(--teal);color:var(--teal)}
 .status.err{border-color:var(--brick);color:var(--brick)}
+.quick-start{background:#FFF9E5;border:1px solid #E7C54A;border-radius:8px;padding:16px;margin-bottom:18px}
+.quick-start h3{margin:0 0 4px}
+.quick-start p{color:var(--ink-soft);font-size:13px;max-width:72ch}
+.quick-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.quick-actions .btn{margin-top:0}
+.key-state{display:block;min-height:20px;margin-top:5px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.key-state.ready{color:var(--teal)}
 
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:6px 0 22px}
 .stat{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--hl);border-radius:6px;padding:14px 14px 10px}
@@ -232,6 +239,14 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <section class="panel" id="p-llm">
   <h2>LLM Yorumu</h2>
   <p class="sub">Analiz özeti, en sık terimler ve örnek özetler seçtiğiniz modele gönderilir; model bulguları akademik dille yorumlar. Anahtarınız yalnızca tarayıcınızın yerel deposunda tutulur.</p>
+  <div class="quick-start">
+    <h3>Hızlı başlangıç: Gemini</h3>
+    <p>Gemini'ı seçin, API anahtarınızı girin ve hazır olduğunuzda bağlantıyı kendiniz sınayın. Anahtar yalnızca bu tarayıcının yerel deposuna kaydedilir.</p>
+    <div class="quick-actions">
+      <button class="btn" id="geminiStart">Gemini ile başla</button>
+      <span class="hint">1. Gemini'ı seçin → 2. anahtarı girin → 3. bağlantıyı deneyin</span>
+    </div>
+  </div>
   <div class="card kn">
     <div class="row">
       <div>
@@ -242,12 +257,18 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
           <option value="openai">OpenAI-uyumlu (ChatGPT / DeepSeek vb.)</option>
         </select>
       </div>
-      <div><label for="llmKey">API anahtarı</label><input type="password" id="llmKey" placeholder="sk-... / AIza..."></div>
+      <div>
+        <label for="llmKey">API anahtarı</label>
+        <input type="password" id="llmKey" placeholder="sk-... / AIza..." autocomplete="off" aria-describedby="llmKeyState">
+        <span class="key-state" id="llmKeyState" aria-live="polite"></span>
+      </div>
     </div>
     <div class="row" id="oaiCompatRow" style="display:none">
       <div><label for="llmBase">API taban adresi</label><input type="text" id="llmBase" value="https://api.openai.com/v1" placeholder="https://api.deepseek.com/v1"></div>
       <div><label for="llmModel">Model adı</label><input type="text" id="llmModel" value="gpt-4o-mini" placeholder="deepseek-chat"></div>
     </div>
+    <button class="btn alt" id="llmTest">Bağlantıyı dene</button>
+    <div class="status" id="llmSetupStat" hidden aria-live="polite"></div>
     <label>Hazır görevler</label>
     <div class="chips">
       <button class="chip" data-p="yorum">Bulguları yorumla</button>
@@ -880,6 +901,29 @@ document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>
 $('llmKey').value = localStorage.getItem('bl_key')||'';
 $('llmProv').value = localStorage.getItem('bl_prov')||'anthropic';
 
+function refreshKeyState(){
+  const hasKey=Boolean(norm($('llmKey').value));
+  const state=$('llmKeyState');
+  state.textContent=hasKey?'Kaydedildi · bağlantı testine hazır':'Anahtar henüz girilmedi';
+  state.className='key-state'+(hasKey?' ready':'');
+  $('llmTest').disabled=!hasKey;
+}
+function saveLLMSettings(){
+  const key=norm($('llmKey').value);
+  if(key) localStorage.setItem('bl_key',key);
+  else localStorage.removeItem('bl_key');
+  localStorage.setItem('bl_prov',$('llmProv').value);
+  refreshKeyState();
+}
+$('geminiStart').addEventListener('click',()=>{
+  $('llmProv').value='gemini';
+  $('llmProv').dispatchEvent(new Event('change'));
+  localStorage.setItem('bl_prov','gemini');
+  $('llmKey').focus();
+  setStatus('llmSetupStat','Gemini seçildi. Şimdi API anahtarınızı girin; ardından “Bağlantıyı dene” düğmesine basın.');
+});
+$('llmKey').addEventListener('input',saveLLMSettings);
+
 function buildContext(){
   const years=RECS.map(r=>r.year).filter(Boolean);
   const cm=(f)=>countMap(f).slice(0,15).map(x=>`${x.label} (${x.n})`).join('; ');
@@ -939,8 +983,30 @@ async function callLLM(messages){
   // Gemini: geçmişi tek metinde birleştir
   return callGemini(key, messages.map(m=>(m.role==='user'?'KULLANICI: ':'ASISTAN: ')+m.content).join('\n\n'));
 }
-$('llmProv').addEventListener('change',()=>{ $('oaiCompatRow').style.display = $('llmProv').value==='openai'?'grid':'none'; });
+$('llmProv').addEventListener('change',()=>{
+  $('oaiCompatRow').style.display = $('llmProv').value==='openai'?'grid':'none';
+  localStorage.setItem('bl_prov',$('llmProv').value);
+  $('llmSetupStat').hidden=true;
+});
 $('oaiCompatRow').style.display = ($('llmProv').value==='openai')?'grid':'none';
+refreshKeyState();
+$('llmTest').addEventListener('click',async ()=>{
+  const key=norm($('llmKey').value);
+  if(!key){ setStatus('llmSetupStat','Önce API anahtarınızı girin.','err'); return; }
+  $('llmTest').disabled=true;
+  setStatus('llmSetupStat','Bağlantı deneniyor…');
+  try{
+    const prov=$('llmProv').value;
+    if(prov==='gemini') await callGemini(key,'Yalnızca “hazır” yaz.');
+    else if(prov==='anthropic') await callAnthropicMsgs(key,[{role:'user',content:'Yalnızca “hazır” yaz.'}]);
+    else await callOpenAI(key,[{role:'user',content:'Yalnızca “hazır” yaz.'}]);
+    saveLLMSettings();
+    setStatus('llmSetupStat','Bağlantı başarılı. Sonraki adım: bir hazır görev seçin veya isteminizi yazın, ardından “Modele gönder” düğmesine basın.','ok');
+  }catch(e){
+    setStatus('llmSetupStat','Bağlantı kurulamadı: '+e.message+' (anahtar, kota veya tarayıcı erişimini kontrol edin).','err');
+  }
+  $('llmTest').disabled=!norm($('llmKey').value);
+});
 
 /* ================= tematik sınıflandırma ================= */
 $('themeGo').addEventListener('click', async ()=>{
