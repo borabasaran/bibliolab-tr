@@ -238,34 +238,22 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <!-- ============ LLM ============ -->
 <section class="panel" id="p-llm">
   <h2>LLM Yorumu</h2>
-  <p class="sub">Analiz özeti, en sık terimler ve örnek özetler seçtiğiniz modele gönderilir; model bulguları akademik dille yorumlar. Anahtarınız yalnızca tarayıcınızın yerel deposunda tutulur.</p>
+  <p class="sub">Analiz özeti, en sık terimler ve örnek özetler Google Gemini'a gönderilir; model bulguları akademik dille yorumlar. Anahtarınız yalnızca tarayıcınızın yerel deposunda tutulur.</p>
   <div class="quick-start">
     <h3>Hızlı başlangıç: Gemini</h3>
-    <p>Gemini'ı seçin, API anahtarınızı girin ve hazır olduğunuzda bağlantıyı kendiniz sınayın. Anahtar yalnızca bu tarayıcının yerel deposuna kaydedilir.</p>
+    <p>Google AI Studio'da bir Gemini API anahtarı oluşturun, anahtarınızı aşağıya girin ve bağlantıyı sınayın. Anahtar yalnızca bu tarayıcının yerel deposuna kaydedilir.</p>
     <div class="quick-actions">
-      <button class="btn" id="geminiStart">Gemini ile başla</button>
-      <span class="hint">1. Gemini'ı seçin → 2. anahtarı girin → 3. bağlantıyı deneyin</span>
+      <a class="btn" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio'da API anahtarı oluştur</a>
+      <span class="hint">1. Anahtar oluşturun → 2. anahtarı girin → 3. bağlantıyı deneyin</span>
     </div>
   </div>
   <div class="card kn">
     <div class="row">
       <div>
-        <label for="llmProv">Sağlayıcı</label>
-        <select id="llmProv">
-          <option value="anthropic">Anthropic — Claude</option>
-          <option value="gemini">Google — Gemini</option>
-          <option value="openai">OpenAI-uyumlu (ChatGPT / DeepSeek vb.)</option>
-        </select>
-      </div>
-      <div>
-        <label for="llmKey">API anahtarı</label>
-        <input type="password" id="llmKey" placeholder="sk-... / AIza..." autocomplete="off" aria-describedby="llmKeyState">
+        <label for="llmKey">Gemini API anahtarı</label>
+        <input type="password" id="llmKey" placeholder="AIza..." autocomplete="off" aria-describedby="llmKeyState">
         <span class="key-state" id="llmKeyState" aria-live="polite"></span>
       </div>
-    </div>
-    <div class="row" id="oaiCompatRow" style="display:none">
-      <div><label for="llmBase">API taban adresi</label><input type="text" id="llmBase" value="https://api.openai.com/v1" placeholder="https://api.deepseek.com/v1"></div>
-      <div><label for="llmModel">Model adı</label><input type="text" id="llmModel" value="gpt-4o-mini" placeholder="deepseek-chat"></div>
     </div>
     <button class="btn alt" id="llmTest">Bağlantıyı dene</button>
     <div class="status" id="llmSetupStat" hidden aria-live="polite"></div>
@@ -899,7 +887,7 @@ const PROMPTS={
 };
 document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ $('llmPrompt').value=PROMPTS[b.dataset.p]; }));
 $('llmKey').value = localStorage.getItem('bl_key')||'';
-$('llmProv').value = localStorage.getItem('bl_prov')||'anthropic';
+localStorage.removeItem('bl_prov');
 
 function refreshKeyState(){
   const hasKey=Boolean(norm($('llmKey').value));
@@ -912,16 +900,8 @@ function saveLLMSettings(){
   const key=norm($('llmKey').value);
   if(key) localStorage.setItem('bl_key',key);
   else localStorage.removeItem('bl_key');
-  localStorage.setItem('bl_prov',$('llmProv').value);
   refreshKeyState();
 }
-$('geminiStart').addEventListener('click',()=>{
-  $('llmProv').value='gemini';
-  $('llmProv').dispatchEvent(new Event('change'));
-  localStorage.setItem('bl_prov','gemini');
-  $('llmKey').focus();
-  setStatus('llmSetupStat','Gemini seçildi. Şimdi API anahtarınızı girin; ardından “Bağlantıyı dene” düğmesine basın.');
-});
 $('llmKey').addEventListener('input',saveLLMSettings);
 
 function buildContext(){
@@ -938,57 +918,30 @@ Diller: ${cm(RECS.map(r=>r.lang).filter(Boolean))}
 Örnek başlıklar: ${RECS.slice(0,20).map(r=>r.title).join(' | ').slice(0,2000)}
 ${abs?'Örnek özetler:\n'+abs:''}`.slice(0,14000);
 }
-async function callAnthropic(key,prompt){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
-    'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01',
-    'anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
-  if(!res.ok) throw new Error('Anthropic HTTP '+res.status);
+async function callGemini(key,messages){
+  const contents=messages.map(m=>({
+    role:m.role==='assistant'?'model':'user',
+    parts:[{text:m.content}]
+  }));
+  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',{
+    method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},
+    body:JSON.stringify({contents})});
+  if(!res.ok){
+    let detail='';
+    try{ detail=(await res.json()).error?.message||''; }catch(_){}
+    throw new Error(`Gemini HTTP ${res.status}${detail?': '+detail:''}`);
+  }
   const j=await res.json();
-  return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
+  const text=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||'').join('\n');
+  if(!text) throw new Error('Gemini boş yanıt döndürdü; istek güvenlik filtresince durdurulmuş olabilir');
+  return text;
 }
-async function callGemini(key,prompt){
-  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key),{
-    method:'POST',headers:{'content-type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-  if(!res.ok) throw new Error('Gemini HTTP '+res.status);
-  const j=await res.json();
-  return (((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||'').join('\n');
-}
-async function callOpenAI(key,messages){
-  const base=norm($('llmBase').value)||'https://api.openai.com/v1';
-  const res=await fetch(base.replace(/\/$/,'')+'/chat/completions',{method:'POST',
-    headers:{'content-type':'application/json','authorization':'Bearer '+key},
-    body:JSON.stringify({model:norm($('llmModel').value)||'gpt-4o-mini',messages})});
-  if(!res.ok) throw new Error('OpenAI-uyumlu HTTP '+res.status);
-  const j=await res.json();
-  return (((j.choices||[])[0]||{}).message||{}).content||'';
-}
-async function callAnthropicMsgs(key,messages){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
-    'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01',
-    'anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages})});
-  if(!res.ok) throw new Error('Anthropic HTTP '+res.status);
-  const j=await res.json();
-  return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
-}
-/* messages: [{role:'user'|'assistant',content:string}] — sağlayıcıdan bağımsız çok turlu çağrı */
+/* messages: [{role:'user'|'assistant',content:string}] */
 async function callLLM(messages){
   const key=norm($('llmKey').value); if(!key) throw new Error('API anahtarı girilmedi');
-  const prov=$('llmProv').value;
-  localStorage.setItem('bl_key',key); localStorage.setItem('bl_prov',prov);
-  if(prov==='anthropic') return callAnthropicMsgs(key,messages);
-  if(prov==='openai') return callOpenAI(key,messages);
-  // Gemini: geçmişi tek metinde birleştir
-  return callGemini(key, messages.map(m=>(m.role==='user'?'KULLANICI: ':'ASISTAN: ')+m.content).join('\n\n'));
+  localStorage.setItem('bl_key',key);
+  return callGemini(key,messages);
 }
-$('llmProv').addEventListener('change',()=>{
-  $('oaiCompatRow').style.display = $('llmProv').value==='openai'?'grid':'none';
-  localStorage.setItem('bl_prov',$('llmProv').value);
-  $('llmSetupStat').hidden=true;
-});
-$('oaiCompatRow').style.display = ($('llmProv').value==='openai')?'grid':'none';
 refreshKeyState();
 $('llmTest').addEventListener('click',async ()=>{
   const key=norm($('llmKey').value);
@@ -996,10 +949,7 @@ $('llmTest').addEventListener('click',async ()=>{
   $('llmTest').disabled=true;
   setStatus('llmSetupStat','Bağlantı deneniyor…');
   try{
-    const prov=$('llmProv').value;
-    if(prov==='gemini') await callGemini(key,'Yalnızca “hazır” yaz.');
-    else if(prov==='anthropic') await callAnthropicMsgs(key,[{role:'user',content:'Yalnızca “hazır” yaz.'}]);
-    else await callOpenAI(key,[{role:'user',content:'Yalnızca “hazır” yaz.'}]);
+    await callGemini(key,[{role:'user',content:'Yalnızca “hazır” yaz.'}]);
     saveLLMSettings();
     setStatus('llmSetupStat','Bağlantı başarılı. Sonraki adım: bir hazır görev seçin veya isteminizi yazın, ardından “Modele gönder” düğmesine basın.','ok');
   }catch(e){
