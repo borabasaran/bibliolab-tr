@@ -1076,7 +1076,7 @@ $('valGo').addEventListener('click',()=>{
       ...extra.map(r=>({durum:'FP — korpusta var, Altın Standartta yok',baslik:r.title,yil:r.year,kaynak:r.src})),
       {durum:'ÖZET',baslik:`TP=${TP} FP=${FP} FN=${FN} precision=${(prec*100).toFixed(2)}% recall=${(rec*100).toFixed(2)}% F1=${(f1*100).toFixed(2)}%`,yil:'',kaynak:''}
     ];
-    dl('bibliolab_dogrulama_raporu.csv','\ufeff'+Papa.unparse(rows),'text/csv;charset=utf-8');
+    dl('bibliolab_dogrulama_raporu.csv',String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
   };
 });
 $('llmGo').addEventListener('click', async ()=>{
@@ -1100,7 +1100,7 @@ $('expCsv').addEventListener('click',()=>{
   const rows=RECS.map(r=>({baslik:r.title,yazarlar:r.authors.join('; '),yil:r.year,dergi:r.journal,tur:r.type||'',
     anahtar_kelimeler:r.keywords.join('; '),ozet:r.abstract,atif:r.cited,kurumlar:r.insts.join('; '),
     ulkeler:r.countries.join('; '),doi:r.doi,dil:r.lang,tema:r.theme||'',kaynak:r.src}));
-  dl('bibliolab_korpus.csv','\ufeff'+Papa.unparse(rows),'text/csv;charset=utf-8');
+  dl('bibliolab_korpus.csv',String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
 });
 $('expJson').addEventListener('click',()=>{ if(RECS.length) dl('bibliolab_korpus.json',JSON.stringify(RECS,null,2),'application/json'); });
 
@@ -1114,5 +1114,6 @@ document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()
 function renderAll(){ renderHealth(); renderAnaliz(); if($('p-ag').classList.contains('active')) renderAg(); }
 window.addEventListener('resize',()=>{ if($('p-ag').classList.contains('active')&&RECS.length) drawNet(); });
 </script>
+<script src="imza.js" defer></script>
 </body>
 </html>
