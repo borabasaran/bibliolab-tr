@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BiblioLab TR — Bibliyometrik Analiz + LLM</title>
+<title>BiblioLab TR: Bibliyometrik Analiz + LLM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -133,7 +133,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <header>
   <div class="wrap">
     <h1>Biblio<em>Lab</em> TR</h1>
-    <p>Tarayıcıda çalışan bibliyometrik analiz platformu: OpenAlex, TR Dizin, DergiPark (OAI-PMH), Scopus/WoS dosyaları — üstüne LLM destekli yorumlama katmanı. Verileriniz ve API anahtarınız bu tarayıcıdan dışarı çıkmaz.</p>
+    <p>Tarayıcıda çalışan bibliyometrik analiz platformu: OpenAlex, TR Dizin, DergiPark (OAI-PMH), Scopus/WoS dosyaları ve üstüne LLM destekli yorumlama katmanı. Verileriniz ve API anahtarınız bu tarayıcıdan dışarı çıkmaz.</p>
     <div class="meta">durum: <span id="recCount">0</span> kayıt yüklü · sunucusuz</div>
   </div>
 </header>
@@ -364,33 +364,44 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <!-- ============ DOĞRULAMA ============ -->
 <section class="panel" id="p-dogrulama">
   <h2>Doğrulama</h2>
-  <p class="sub">Yazılım çıktısını manuel oluşturulmuş Altın Standart veri setiyle karşılaştırır; kayıt eşleşmesi için precision, recall ve F1-score, anahtar kelime ve tema kodlaması için Jaccard örtüşmesi hesaplanır.</p>
+  <p class="sub">Korpusu elle hazırlanmış Altın Standart veri setiyle karşılaştırır: kayıt eşleşmesi için precision, recall ve F1-score; anahtar kelime ve tema kodlaması için Jaccard örtüşmesi hesaplanır.</p>
   <div class="card kn">
-    <label for="goldIn">Altın Standart dosyası (CSV veya XLSX — sütunlar: baslik/title, yil/year; isteğe bağlı: doi, anahtar_kelimeler/keywords, tema/theme)</label>
-    <input type="file" id="goldIn" accept=".csv,.xlsx">
-    <label for="valTh">Bulanık başlık eşleşme eşiği (0–1)</label>
-    <input type="number" id="valTh" value="0.90" step="0.01" min="0.5" max="1">
+    <div class="row">
+      <div>
+        <label for="goldIn">Altın Standart dosyası (CSV veya XLSX)</label>
+        <input type="file" id="goldIn" accept=".csv,.xlsx">
+        <p class="hint">Zorunlu sütunlar: baslik (veya title) ve yil (veya year). İsteğe bağlı: doi, anahtar_kelimeler (veya keywords), tema (veya theme).</p>
+      </div>
+      <div>
+        <label for="valTh">Bulanık başlık eşleşme eşiği (0,50 ile 1 arası)</label>
+        <input type="number" id="valTh" value="0.90" step="0.01" min="0.5" max="1">
+        <p class="hint">Eşleştirme önce DOI ile, ardından ±1 yıl toleransla başlık benzerliğine göre yapılır.</p>
+      </div>
+    </div>
     <button class="btn" id="valGo">Karşılaştır</button>
     <div class="status" id="valStat" hidden></div>
   </div>
   <div id="valBody" style="display:none">
     <div class="stats" id="valCards"></div>
-    <h3>Altın Standartta olup korpusta bulunamayanlar (ilk 20 — recall kaybı)</h3>
-    <div class="chartbox" style="overflow-x:auto"><table id="missTable"></table></div>
-    <h3>Korpusta olup Altın Standartta bulunmayanlar (ilk 20 — precision kaybı)</h3>
-    <div class="chartbox" style="overflow-x:auto"><table id="extraTable"></table></div>
-    <button class="btn" id="valReport">Doğrulama raporunu indir (CSV)</button>
+    <div class="grid2" style="align-items:start">
+      <div class="chartbox" style="overflow-x:auto"><h4>Altın Standartta olup korpusta bulunamayanlar (ilk 20, recall kaybı)</h4><table id="missTable"></table></div>
+      <div class="chartbox" style="overflow-x:auto"><h4>Korpusta olup Altın Standartta bulunmayanlar (ilk 20, precision kaybı)</h4><table id="extraTable"></table></div>
+    </div>
+    <button class="btn" id="valReport" style="margin-top:0">Doğrulama raporunu indir (CSV)</button>
   </div>
 </section>
 
 <!-- ============ DIŞA AKTAR ============ -->
 <section class="panel" id="p-disa">
   <h2>Dışa Aktar</h2>
-  <p class="sub">Normalleştirilmiş korpusu indirin; CSV çıktısı Excel/SPSS/R ile, JSON çıktısı Python ile doğrudan kullanılabilir.</p>
-  <div class="card">
-    <button class="btn" id="expCsv">CSV indir</button>
-    <button class="btn alt" id="expJson">JSON indir</button>
-    <p class="hint" style="margin-top:14px">Sütunlar: başlık, yazarlar, yıl, dergi, anahtar kelimeler, özet, atıf, kurumlar, ülkeler, DOI, dil, kaynak.</p>
+  <p class="sub">Normalleştirilmiş korpusu indirin. CSV çıktısı Excel, SPSS ve R ile; JSON çıktısı Python ile doğrudan kullanılabilir.</p>
+  <div class="card kn">
+    <p id="expInfo" style="font-weight:500">Dışa aktarılacak kayıt yok. Önce 1. sekmeden veri yükleyin.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="expCsv" disabled>CSV indir</button>
+      <button class="btn alt" id="expJson" disabled>JSON indir</button>
+    </div>
+    <p class="hint" style="margin-top:14px">CSV sütunları: baslik, yazarlar, yil, dergi, tur, anahtar_kelimeler, ozet, atif, kurumlar, ulkeler, doi, dil, tema, kaynak. Çoklu değerler noktalı virgülle ayrılır; dosya, Türkçe karakterlerin Excel'de doğru görünmesi için UTF-8 BOM ile kaydedilir. JSON çıktısı ayrıca OpenAlex kaynakça kimliklerini (refs) içerir.</p>
   </div>
 </section>
 
@@ -580,7 +591,7 @@ $('trGo').addEventListener('click',()=>{
   try{
     const j=JSON.parse($('trJson').value);
     const list=extractTRList(j).map(mapTR).filter(r=>r.title);
-    if(!list.length){ setStatus('trStat','Tanınan kayıt bulunamadı — JSON yapısını kontrol edin.','err'); return; }
+    if(!list.length){ setStatus('trStat','Tanınan kayıt bulunamadı; JSON yapısını kontrol edin.','err'); return; }
     addRecords(list,'trStat','TR Dizin');
   }catch(e){ setStatus('trStat','JSON ayrıştırılamadı: '+e.message,'err'); }
 });
@@ -635,7 +646,7 @@ $('oaiGo').addEventListener('click', async ()=>{
       const u = base + (base.includes('?')?'&':'?') + (token
         ? 'verb=ListRecords&resumptionToken='+encodeURIComponent(token)
         : 'verb=ListRecords&metadataPrefix=oai_dc');
-      const res = await fetch(mk(u)); if(!res.ok) throw new Error('HTTP '+res.status+' — CORS engeli olabilir, proxy deneyin');
+      const res = await fetch(mk(u)); if(!res.ok) throw new Error('HTTP '+res.status+' (CORS engeli olabilir, proxy deneyin)');
       const xml = new DOMParser().parseFromString(await res.text(),'text/xml');
       const err = xml.querySelector('error'); if(err) throw new Error(err.textContent);
       const g = tag => rec => [...rec.getElementsByTagNameNS('http://purl.org/dc/elements/1.1/',tag)].map(n=>norm(n.textContent));
@@ -759,7 +770,7 @@ function renderAnaliz(){
   const collab = (RECS.reduce((s,r)=>s+r.authors.length,0)/RECS.length).toFixed(2);
   const stats = [
     [RECS.length,'yayın'],[authors.length,'yazar'],[journals.length,'dergi'],
-    [years.length?Math.min(...years)+'–'+Math.max(...years):'—','yıl aralığı'],
+    [years.length?Math.min(...years)+'–'+Math.max(...years):'?','yıl aralığı'],
     [totCit,'toplam atıf'],[(totCit/RECS.length).toFixed(1),'ort. atıf/yayın'],[collab,'ort. yazar/yayın'],[kws.length,'anahtar kelime']
   ];
   $('statCards').innerHTML = stats.map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
@@ -968,7 +979,7 @@ async function drawNet(){
   if(curNet==='bc'||curNet==='cc'){
     if(!refDocs().length){
       ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans';
-      ctx.fillText('Atıf ağları için kaynakça verisi gerekir — OpenAlex sekmesinden veri çekin.',40,80);
+      ctx.fillText('Atıf ağları için kaynakça verisi gerekir: OpenAlex sekmesinden veri çekin.',40,80);
       $('edgeTable').innerHTML=''; return;
     }
     if(curNet==='cc'){ ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans'; ctx.fillText('Referans başlıkları OpenAlex üzerinden çözümleniyor…',40,80); }
@@ -1168,7 +1179,7 @@ $('goldIn').addEventListener('change', async ev=>{
 });
 $('valGo').addEventListener('click', async ()=>{
   if(!GOLD.length){ setStatus('valStat','Önce Altın Standart CSV yükleyin.','err'); return; }
-  if(!RECS.length){ setStatus('valStat','Korpus boş — önce 1. sekmeden veri yükleyin.','err'); return; }
+  if(!RECS.length){ setStatus('valStat','Korpus boş: önce 1. sekmeden veri yükleyin.','err'); return; }
   const th=Math.min(1,Math.max(.5,+$('valTh').value||.9));
   const matchOf=new Map(); // gold index -> rec
   const usedRec=new Set();
@@ -1211,14 +1222,15 @@ $('valGo').addEventListener('click', async ()=>{
   $('valCards').innerHTML=cards.map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
   const missed=GOLD.filter((g,i)=>!matchOf.has(i));
   const extra=RECS.filter(r=>!usedRec.has(r));
-  $('missTable').innerHTML='<tr><th>Başlık</th><th>Yıl</th></tr>'+missed.slice(0,20).map(g=>`<tr><td>${esc(g.title)}</td><td class="num">${esc(g.year||'')}</td></tr>`).join('');
-  $('extraTable').innerHTML='<tr><th>Başlık</th><th>Yıl</th><th>Kaynak</th></tr>'+extra.slice(0,20).map(r=>`<tr><td>${esc(r.title)}</td><td class="num">${esc(r.year||'')}</td><td>${esc(r.src)}</td></tr>`).join('');
+  const none=(cols,msg)=>`<tr><td colspan="${cols}" class="empty" style="padding:16px 0">${msg}</td></tr>`;
+  $('missTable').innerHTML='<tr><th>Başlık</th><th>Yıl</th></tr>'+(missed.length?missed.slice(0,20).map(g=>`<tr><td>${esc(g.title)}</td><td class="num">${esc(g.year||'')}</td></tr>`).join(''):none(2,'Eksik kayıt yok: Altın Standarttaki tüm kayıtlar korpusta bulundu.'));
+  $('extraTable').innerHTML='<tr><th>Başlık</th><th>Yıl</th><th>Kaynak</th></tr>'+(extra.length?extra.slice(0,20).map(r=>`<tr><td>${esc(r.title)}</td><td class="num">${esc(r.year||'')}</td><td>${esc(r.src)}</td></tr>`).join(''):none(3,'Fazla kayıt yok: korpustaki tüm kayıtlar Altın Standartta bulundu.'));
   $('valBody').style.display='block';
   setStatus('valStat',`Karşılaştırma tamamlandı (eşik ${th}). Altın Standart: ${GOLD.length} · Korpus: ${RECS.length}`,'ok');
   $('valReport').onclick=()=>{
     const rows=[
-      ...missed.map(g=>({durum:'FN — Altın Standartta var, korpusta yok',baslik:g.title,yil:g.year,kaynak:''})),
-      ...extra.map(r=>({durum:'FP — korpusta var, Altın Standartta yok',baslik:r.title,yil:r.year,kaynak:r.src})),
+      ...missed.map(g=>({durum:'FN: Altın Standartta var, korpusta yok',baslik:g.title,yil:g.year,kaynak:''})),
+      ...extra.map(r=>({durum:'FP: korpusta var, Altın Standartta yok',baslik:r.title,yil:r.year,kaynak:r.src})),
       {durum:'ÖZET',baslik:`TP=${TP} FP=${FP} FN=${FN} precision=${(prec*100).toFixed(2)}% recall=${(rec*100).toFixed(2)}% F1=${(f1*100).toFixed(2)}%`,yil:'',kaynak:''}
     ];
     dl('bibliolab_dogrulama_raporu.csv',String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
@@ -1249,6 +1261,13 @@ $('expCsv').addEventListener('click',()=>{
   dl('bibliolab_korpus.csv',String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
 });
 $('expJson').addEventListener('click',()=>{ if(RECS.length) dl('bibliolab_korpus.json',JSON.stringify(RECS,null,2),'application/json'); });
+function renderExport(){
+  const n=RECS.length, themed=RECS.filter(r=>r.theme).length;
+  $('expCsv').disabled=$('expJson').disabled=!n;
+  $('expInfo').textContent = n
+    ? `${n} kayıt dışa aktarılmaya hazır${themed?`; ${themed} kayıtta tema etiketi var`:''}.`
+    : 'Dışa aktarılacak kayıt yok. Önce 1. sekmeden veri yükleyin.';
+}
 
 /* ================= sekmeler ================= */
 const isActive = t => $('p-'+t).classList.contains('active');
@@ -1262,7 +1281,7 @@ document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()
 }));
 /* veri değişince: sağlık raporu hemen, görünür sekme hemen, gizli sekmeler açıldıklarında çizilir; korpus tarayıcıya kaydedilir */
 function renderAll(){
-  renderHealth(); anDirty=true; agDirty=true; saveCorpus();
+  renderHealth(); renderExport(); anDirty=true; agDirty=true; saveCorpus();
   if(isActive('analiz')) renderAnaliz();
   if(isActive('ag')) renderAg();
 }
