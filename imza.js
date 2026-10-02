@@ -1,10 +1,10 @@
 // BiblioLab: sürüm imzası. Görünür bir değişiklik yayınlandığında SURUM'u artırın;
-// sayfaların altında "© 2026 BiblioLab v1.5 by bbasaran" olarak görünür.
+// sayfaların altında "© 2026 BiblioLab v1.6 by bbasaran" olarak görünür.
 // "bbasaran" bbasaran.net'e bağlanır; yazı çevresindeki metinle aynı görünür,
 // altı çizilmez ve rengi değişmez, yalnızca üzerine gelince altçizgi belirir.
 (function () {
   var AD = 'BiblioLab';
-  var SURUM = '1.5';
+  var SURUM = '1.6';
   var YAZAR = 'bbasaran';
   var YAZAR_URL = 'https://bbasaran.net';
 
