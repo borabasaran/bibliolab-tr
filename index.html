@@ -64,11 +64,14 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--hl);outline-offs
 .status{font-family:var(--mono);font-size:13px;margin-top:12px;padding:10px 12px;border-radius:6px;background:var(--paper);border:1px dashed var(--line);white-space:pre-wrap}
 .status.ok{border-color:var(--teal);color:var(--teal)}
 .status.err{border-color:var(--brick);color:var(--brick)}
-.quick-start{background:#FFF9E5;border:1px solid #E7C54A;border-radius:8px;padding:16px;margin-bottom:18px}
-.quick-start h3{margin:0 0 4px}
-.quick-start p{color:var(--ink-soft);font-size:13px;max-width:72ch}
-.quick-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
-.quick-actions .btn{margin-top:0}
+.key-bar{display:flex;align-items:center;justify-content:space-between;gap:8px 24px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+  border-left:4px solid var(--hl);border-radius:8px;padding:12px 16px 6px;margin-bottom:18px}
+.kb-field{flex:1 1 340px;max-width:600px}
+.kb-field label{margin-top:0}
+.kb-row{display:flex;gap:8px}
+.kb-row input{flex:1;min-width:0}
+.kb-link{font-size:13px;font-weight:500;color:var(--teal)}
+.key-bar .status{flex-basis:100%;margin:0 0 8px}
 .key-state{display:block;min-height:20px;margin-top:5px;font-family:var(--mono);font-size:12px;color:var(--muted)}
 .key-state.ready{color:var(--teal)}
 
@@ -165,9 +168,9 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 
   <div class="card kn src-card">
     <div class="src-tabs" role="tablist" aria-label="Veri kaynağı">
-      <button role="tab" class="on" aria-selected="true" data-src="oa">OpenAlex <small>önerilen</small></button>
-      <button role="tab" aria-selected="false" data-src="dosya">Dosya yükle</button>
-      <button role="tab" aria-selected="false" data-src="oai">DergiPark</button>
+      <button role="tab" class="on" aria-selected="true" data-pane="src-oa">OpenAlex <small>önerilen</small></button>
+      <button role="tab" aria-selected="false" data-pane="src-dosya">Dosya yükle</button>
+      <button role="tab" aria-selected="false" data-pane="src-oai">DergiPark</button>
     </div>
 
     <div class="src-pane on" id="src-oa" role="tabpanel">
@@ -299,56 +302,61 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <!-- ============ LLM ============ -->
 <section class="panel" id="p-llm">
   <h2>LLM Yorumu</h2>
-  <p class="sub">Analiz özeti, en sık terimler ve örnek özetler Google Gemini'a gönderilir; model bulguları akademik dille yorumlar. Anahtarınız yalnızca tarayıcınızın yerel deposunda tutulur.</p>
-  <div class="quick-start">
-    <h3>Hızlı başlangıç: Gemini</h3>
-    <p>Google AI Studio'da bir Gemini API anahtarı oluşturun, anahtarınızı aşağıya girin ve bağlantıyı sınayın. Anahtar yalnızca bu tarayıcının yerel deposuna kaydedilir.</p>
-    <div class="quick-actions">
-      <a class="btn" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio'da API anahtarı oluştur</a>
-      <span class="hint">1. Anahtar oluşturun → 2. anahtarı girin → 3. bağlantıyı deneyin</span>
-    </div>
-  </div>
-  <div class="card kn">
-    <div class="row">
-      <div>
-        <label for="llmKey">Gemini API anahtarı</label>
+  <p class="sub">Korpus özeti, en sık terimler ve örnek özetler Google Gemini'a gönderilir; model bulguları akademik dille yorumlar. Anahtarınız yalnızca bu tarayıcının yerel deposunda tutulur.</p>
+
+  <div class="key-bar">
+    <div class="kb-field">
+      <label for="llmKey">Gemini API anahtarı</label>
+      <div class="kb-row">
         <input type="password" id="llmKey" placeholder="AIza..." autocomplete="off" aria-describedby="llmKeyState">
-        <span class="key-state" id="llmKeyState" aria-live="polite"></span>
+        <button class="btn alt sm" id="llmTest">Bağlantıyı dene</button>
       </div>
+      <span class="key-state" id="llmKeyState" aria-live="polite"></span>
     </div>
-    <button class="btn alt" id="llmTest">Bağlantıyı dene</button>
+    <a class="kb-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Anahtarınız yok mu? Google AI Studio'da oluşturun →</a>
     <div class="status" id="llmSetupStat" hidden aria-live="polite"></div>
-    <label>Hazır görevler</label>
-    <div class="chips">
-      <button class="chip" data-p="yorum">Bulguları yorumla</button>
-      <button class="chip" data-p="yontem">Yöntem paragrafı taslağı</button>
-      <button class="chip" data-p="tema">Tematik sentez</button>
-      <button class="chip" data-p="bosluk">Araştırma boşlukları</button>
-      <button class="chip" data-p="karar">Karar destek raporu (pilot senaryo)</button>
+  </div>
+
+  <div class="card kn src-card">
+    <div class="src-tabs" role="tablist" aria-label="LLM araçları">
+      <button role="tab" class="on" aria-selected="true" data-pane="llm-gorev">Hazır görevler</button>
+      <button role="tab" aria-selected="false" data-pane="llm-tema">Tematik sınıflandırma</button>
+      <button role="tab" aria-selected="false" data-pane="llm-sohbet">Korpusla sohbet</button>
     </div>
-    <label for="llmPrompt">İstem (düzenlenebilir)</label>
-    <textarea id="llmPrompt" placeholder="Bir hazır görev seçin veya kendi isteminizi yazın."></textarea>
-    <button class="btn" id="llmGo">Modele gönder</button>
-    <div class="status" id="llmStat" hidden></div>
-  </div>
-  <div class="llm-out" id="llmOut"></div>
 
-  <div class="card">
-    <h3 style="margin-top:0">Otomatik tematik sınıflandırma</h3>
-    <p class="hint">Model, kayıtları başlık + anahtar kelimelerden hareketle 5–8 temaya atar; sonuç korpusa yazılır, Analiz sekmesinde grafiği ve dışa aktarımda "tema" sütunu oluşur. Doğrulama sekmesinde bu atamalar Altın Standart kodlamayla karşılaştırılabilir.</p>
-    <button class="btn" id="themeGo">Korpusu tematik sınıflandır</button>
-    <div class="status" id="themeStat" hidden></div>
-  </div>
+    <div class="src-pane on" id="llm-gorev" role="tabpanel">
+      <p class="hint" style="margin-top:0">Bir görev seçin; istem kutuya gelir, isterseniz düzenleyip gönderin. Korpus özeti isteme otomatik eklenir.</p>
+      <div class="chips">
+        <button class="chip" data-p="yorum">Bulguları yorumla</button>
+        <button class="chip" data-p="yontem">Yöntem paragrafı taslağı</button>
+        <button class="chip" data-p="tema">Tematik sentez</button>
+        <button class="chip" data-p="bosluk">Araştırma boşlukları</button>
+        <button class="chip" data-p="karar">Karar destek raporu (pilot senaryo)</button>
+      </div>
+      <label for="llmPrompt">İstem (düzenlenebilir)</label>
+      <textarea id="llmPrompt" placeholder="Bir hazır görev seçin veya kendi isteminizi yazın."></textarea>
+      <button class="btn" id="llmGo">Modele gönder</button>
+      <div class="status" id="llmStat" hidden></div>
+      <div class="llm-out" id="llmOut"></div>
+    </div>
 
-  <div class="card">
-    <h3 style="margin-top:0">Korpusla sohbet (doğal dilde sorgulama)</h3>
-    <p class="hint">Çok turlu sohbet: model korpus özetini bağlam olarak alır, önceki sorular hatırlanır.</p>
-    <div id="chatLog" style="max-height:340px;overflow-y:auto;margin-bottom:10px"></div>
-    <label for="chatIn">Sorunuz</label>
-    <textarea id="chatIn" style="min-height:60px" placeholder="örn. En üretken üç yazarın tematik yönelimleri arasında fark var mı?"></textarea>
-    <button class="btn" id="chatGo">Sor</button>
-    <button class="btn alt" id="chatClear">Sohbeti sıfırla</button>
-    <div class="status" id="chatStat" hidden></div>
+    <div class="src-pane" id="llm-tema" role="tabpanel">
+      <p class="hint" style="margin-top:0">Model, kayıtları başlık ve anahtar kelimelerden hareketle 5–8 temaya atar. Sonuç korpusa yazılır: Analiz sekmesinde "İçerik ve temalar" grafiği ve dışa aktarımda "tema" sütunu oluşur; Doğrulama sekmesinde Altın Standart kodlamayla karşılaştırılabilir.</p>
+      <button class="btn" id="themeGo">Korpusu tematik sınıflandır</button>
+      <div class="status" id="themeStat" hidden></div>
+    </div>
+
+    <div class="src-pane" id="llm-sohbet" role="tabpanel">
+      <p class="hint" style="margin-top:0">Çok turlu sohbet: model korpus özetini bağlam olarak alır ve önceki soruları hatırlar. Göndermek için Ctrl+Enter da kullanılabilir.</p>
+      <div id="chatLog" style="max-height:380px;overflow-y:auto;margin:10px 0"></div>
+      <label for="chatIn">Sorunuz</label>
+      <textarea id="chatIn" style="min-height:60px" placeholder="örn. En üretken üç yazarın tematik yönelimleri arasında fark var mı?"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="chatGo">Sor</button>
+        <button class="btn alt" id="chatClear">Sohbeti sıfırla</button>
+      </div>
+      <div class="status" id="chatStat" hidden></div>
+    </div>
   </div>
 </section>
 
@@ -649,11 +657,12 @@ $('clearBtn').addEventListener('click',()=>{
   if(!RECS.length || !confirm(RECS.length+' kayıtlık korpus silinsin mi? Bu işlem geri alınamaz.')) return;
   RECS=[]; refreshCount(); renderAll(); $('fuzzyStat').hidden=true;
 });
-/* kaynak sekmeleri */
-document.querySelectorAll('[data-src]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-src]').forEach(x=>{ x.classList.remove('on'); x.setAttribute('aria-selected','false'); });
-  document.querySelectorAll('.src-pane').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); b.setAttribute('aria-selected','true'); $('src-'+b.dataset.src).classList.add('on');
+/* kart içi sekmeler (Veri kaynakları, LLM araçları): her kart kendi bölmelerini yönetir */
+document.querySelectorAll('.src-tabs [data-pane]').forEach(b=>b.addEventListener('click',()=>{
+  const card=b.closest('.src-card');
+  card.querySelectorAll('.src-tabs [data-pane]').forEach(x=>{ x.classList.remove('on'); x.setAttribute('aria-selected','false'); });
+  card.querySelectorAll('.src-pane').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); b.setAttribute('aria-selected','true'); $(b.dataset.pane).classList.add('on');
 }));
 $('goAnaliz').addEventListener('click',()=>{ document.querySelector('nav button[data-t=analiz]').click(); window.scrollTo({top:0,behavior:'smooth'}); });
 /* yapışkan korpus şeridi, sekme çubuğunun hemen altında dursun */
@@ -1009,7 +1018,11 @@ const PROMPTS={
   bosluk:'Aşağıdaki bibliyometrik görünüme dayanarak bu alanda az çalışılmış görünen konuları ve olası araştırma boşluklarını Türkçe listele; her öneri için veriden hangi işarete dayandığını belirt. Spekülatif olduğun yerleri açıkça işaretle.',
   karar:'Pilot Karar Senaryosu: Aşağıdaki bibliyometrik korpus özetine dayanarak bir bölüm/birim stratejik planına girdi olacak, veri temelli bir KARAR DESTEK RAPORU (politika bilgilendirme notu) hazırla. Yapı: (1) Mevcut durum özeti, (2) Güçlü üretim alanları, (3) Zayıf/boş alanlar, (4) İşbirliği yapısına ilişkin gözlemler, (5) 3-5 somut, uygulanabilir öneri. Her tespitte hangi veriye dayandığını parantez içinde belirt; verinin kapsam sınırlarını raporun sonunda tek paragrafta açıkla. Türkçe ve kurumsal bir dille yaz.'
 };
-document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ $('llmPrompt').value=PROMPTS[b.dataset.p]; }));
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  $('llmPrompt').value=PROMPTS[b.dataset.p];
+}));
+$('llmPrompt').addEventListener('input',()=>document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')));
 $('llmKey').value = localStorage.getItem('bl_key')||'';
 localStorage.removeItem('bl_prov');
 
@@ -1127,6 +1140,7 @@ $('chatGo').addEventListener('click', async ()=>{
   $('chatGo').disabled=false;
 });
 $('chatClear').addEventListener('click',()=>{ CHAT=[]; $('chatLog').innerHTML=''; $('chatStat').hidden=true; });
+$('chatIn').addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); $('chatGo').click(); } });
 
 /* ================= doğrulama (precision / recall / F1) ================= */
 let GOLD=[];
