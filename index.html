@@ -72,10 +72,14 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--hl);outline-offs
 .key-state{display:block;min-height:20px;margin-top:5px;font-family:var(--mono);font-size:12px;color:var(--muted)}
 .key-state.ready{color:var(--teal)}
 
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:6px 0 22px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 22px}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--hl);border-radius:6px;padding:14px 14px 10px}
 .stat b{display:block;font-family:var(--mono);font-size:24px;font-weight:500}
-.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.stat span{font-size:12.5px;color:var(--muted)}
+.an-groups{margin:0 0 2px}
+.an-grp{display:none;margin-top:16px}
+.an-grp.on{display:block}
 
 .chartbox{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:18px}
 .chartbox h4{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--ink-soft)}
@@ -227,29 +231,50 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-s
 <!-- ============ ANALİZ ============ -->
 <section class="panel" id="p-analiz">
   <h2>Analiz</h2>
-  <p class="sub">Korpusun betimsel görünümü. Uyarı: TR Dizin/DergiPark meta verisi kaynakça içermediğinden atıf-ağı analizleri (ortak atıf, RPYS vb.) yalnızca OpenAlex kaynaklı kayıtlarda anlamlıdır.</p>
+  <p class="sub">Korpusun betimsel görünümü. Atıf ağı analizleri (ortak atıf, RPYS vb.) yalnızca kaynakça taşıyan OpenAlex kayıtlarında anlamlıdır; TR Dizin ve DergiPark meta verisi kaynakça içermez.</p>
   <div id="anEmpty" class="empty">Önce 1. sekmeden veri yükleyin.</div>
   <div id="anBody" style="display:none">
     <div class="stats" id="statCards"></div>
-    <div class="grid2">
-      <div class="chartbox"><h4>Yıllara göre yayın</h4><canvas id="chYear"></canvas></div>
-      <div class="chartbox"><h4>Yıllara göre toplam atıf</h4><canvas id="chCit"></canvas></div>
-      <div class="chartbox"><h4>En üretken 10 yazar</h4><canvas id="chAuth"></canvas></div>
-      <div class="chartbox"><h4>En üretken 10 dergi</h4><canvas id="chJour"></canvas></div>
-      <div class="chartbox"><h4>En sık 12 anahtar kelime</h4><canvas id="chKw"></canvas></div>
-      <div class="chartbox"><h4>Dillere göre dağılım</h4><canvas id="chLang"></canvas></div>
-      <div class="chartbox"><h4>En üretken 10 kurum</h4><canvas id="chInst"></canvas></div>
-      <div class="chartbox"><h4>Ülkelere göre dağılım (coğrafi işbirliği)</h4><canvas id="chCountry"></canvas></div>
-      <div class="chartbox"><h4>Yayın türleri</h4><canvas id="chType"></canvas></div>
-      <div class="chartbox" id="themeBox" style="display:none"><h4>LLM tematik sınıflandırma dağılımı</h4><canvas id="chTheme"></canvas></div>
+    <div class="chips an-groups" role="tablist" aria-label="Analiz grupları">
+      <button class="chip on" role="tab" aria-selected="true" data-grp="genel">Genel görünüm</button>
+      <button class="chip" role="tab" aria-selected="false" data-grp="yazar">Yazar ve kurum</button>
+      <button class="chip" role="tab" aria-selected="false" data-grp="dergi">Dergi ve kaynak</button>
+      <button class="chip" role="tab" aria-selected="false" data-grp="icerik">İçerik ve temalar</button>
     </div>
-    <div class="chartbox"><h4>Anahtar kelime bulutu (WordCloud)</h4><canvas id="wcCanvas" style="width:100%" height="380"></canvas></div>
-    <div class="grid2">
-      <div class="chartbox"><h4>Dergi payları (TreeMap)</h4><canvas id="tmCanvas" style="width:100%" height="340"></canvas></div>
+
+    <div class="an-grp on" id="grp-genel" role="tabpanel">
+      <div class="grid2">
+        <div class="chartbox"><h4>Yıllara göre yayın</h4><canvas id="chYear"></canvas></div>
+        <div class="chartbox"><h4>Yıllara göre toplam atıf</h4><canvas id="chCit"></canvas></div>
+        <div class="chartbox"><h4>Yayın türleri</h4><canvas id="chType"></canvas></div>
+        <div class="chartbox"><h4>Dillere göre dağılım</h4><canvas id="chLang"></canvas></div>
+      </div>
+      <div class="chartbox" style="overflow-x:auto"><h4>En çok atıf alan 15 yayın</h4><table id="topTable"></table></div>
+    </div>
+
+    <div class="an-grp" id="grp-yazar" role="tabpanel">
+      <div class="grid2">
+        <div class="chartbox"><h4>En üretken 10 yazar</h4><canvas id="chAuth"></canvas></div>
+        <div class="chartbox"><h4>En üretken 10 kurum</h4><canvas id="chInst"></canvas></div>
+      </div>
+      <div class="chartbox"><h4>Ülkelere göre dağılım (coğrafi işbirliği)</h4><canvas id="chCountry"></canvas></div>
+    </div>
+
+    <div class="an-grp" id="grp-dergi" role="tabpanel">
+      <div class="grid2">
+        <div class="chartbox"><h4>En üretken 10 dergi</h4><canvas id="chJour"></canvas></div>
+        <div class="chartbox"><h4>Dergi payları (TreeMap)</h4><canvas id="tmCanvas" style="width:100%" height="340"></canvas></div>
+      </div>
       <div class="chartbox"><h4>Kaynak → Dergi akışı (Sankey)</h4><canvas id="skCanvas" style="width:100%" height="340"></canvas></div>
     </div>
-    <h3>En çok atıf alan 15 yayın</h3>
-    <div class="chartbox" style="overflow-x:auto"><table id="topTable"></table></div>
+
+    <div class="an-grp" id="grp-icerik" role="tabpanel">
+      <div class="chartbox"><h4>Anahtar kelime bulutu (WordCloud)</h4><canvas id="wcCanvas" style="width:100%" height="380"></canvas></div>
+      <div class="grid2">
+        <div class="chartbox"><h4>En sık 12 anahtar kelime</h4><canvas id="chKw"></canvas></div>
+        <div class="chartbox" id="themeBox"><h4>LLM tematik sınıflandırma dağılımı</h4><canvas id="chTheme"></canvas><p class="empty" id="themeEmpty" style="padding:20px 0">Henüz tematik sınıflandırma yapılmadı. LLM Yorumu sekmesinden "Korpusu tematik sınıflandır" ile oluşturabilirsiniz.</p></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -732,36 +757,44 @@ function renderAnaliz(){
   const yMap={}; const cMap={};
   for(const r of RECS){ if(!r.year) continue; yMap[r.year]=(yMap[r.year]||0)+1; cMap[r.year]=(cMap[r.year]||0)+r.cited; }
   const ys=Object.keys(yMap).sort();
-  mkChart('chYear',{type:'bar',data:{labels:ys,datasets:[{data:ys.map(y=>yMap[y]),backgroundColor:INK}]},options:{plugins:{legend:{display:false}}}});
-  mkChart('chCit',{type:'line',data:{labels:ys,datasets:[{data:ys.map(y=>cMap[y]),borderColor:TEAL,backgroundColor:'rgba(46,110,94,.12)',fill:true,tension:.3}]},options:{plugins:{legend:{display:false}}}});
+  mkChart('chYear',{type:'bar',data:{labels:ys,datasets:[{data:ys.map(y=>yMap[y]),backgroundColor:INK}]},options:{scales:{y:{beginAtZero:true}},plugins:{legend:{display:false}}}});
+  mkChart('chCit',{type:'line',data:{labels:ys,datasets:[{data:ys.map(y=>cMap[y]),borderColor:TEAL,backgroundColor:'rgba(46,110,94,.12)',fill:true,tension:.3}]},options:{scales:{y:{beginAtZero:true,suggestedMax:1}},plugins:{legend:{display:false}}}});
   const hbar=(id,arr,color)=>mkChart(id,{type:'bar',data:{labels:arr.map(a=>a.label.length>32?a.label.slice(0,30)+'…':a.label),datasets:[{data:arr.map(a=>a.n),backgroundColor:color}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
   hbar('chAuth',authors.slice(0,10),INK);
   hbar('chJour',journals.slice(0,10),TEAL);
   hbar('chKw',kws.slice(0,12),BRICK);
-  mkChart('chLang',{type:'doughnut',data:{labels:langs.slice(0,6).map(l=>l.label),datasets:[{data:langs.slice(0,6).map(l=>l.n),backgroundColor:[INK,HL,TEAL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{plugins:{legend:{position:'right'}}}});
+  mkChart('chLang',{type:'doughnut',data:{labels:langs.slice(0,6).map(l=>l.label),datasets:[{data:langs.slice(0,6).map(l=>l.n),backgroundColor:[INK,HL,TEAL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{aspectRatio:2,plugins:{legend:{position:'right'}}}});
   const insts=countMap(RECS.flatMap(r=>r.insts));
   hbar('chInst',insts.slice(0,10),'#33415C');
   const ctry=countMap(RECS.flatMap(r=>r.countries));
-  mkChart('chCountry',{type:'bar',data:{labels:ctry.slice(0,12).map(c=>c.label),datasets:[{data:ctry.slice(0,12).map(c=>c.n),backgroundColor:TEAL}]},options:{plugins:{legend:{display:false}}}});
+  mkChart('chCountry',{type:'bar',data:{labels:ctry.slice(0,12).map(c=>c.label),datasets:[{data:ctry.slice(0,12).map(c=>c.n),backgroundColor:TEAL}]},options:{aspectRatio:3,plugins:{legend:{display:false}}}});
   const types=countMap(RECS.map(r=>r.type||'belirsiz'));
-  mkChart('chType',{type:'doughnut',data:{labels:types.slice(0,6).map(t=>t.label),datasets:[{data:types.slice(0,6).map(t=>t.n),backgroundColor:[TEAL,INK,HL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{plugins:{legend:{position:'right'}}}});
+  mkChart('chType',{type:'doughnut',data:{labels:types.slice(0,6).map(t=>t.label),datasets:[{data:types.slice(0,6).map(t=>t.n),backgroundColor:[TEAL,INK,HL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{aspectRatio:2,plugins:{legend:{position:'right'}}}});
   const themes=countMap(RECS.map(r=>r.theme).filter(Boolean));
-  $('themeBox').style.display=themes.length?'block':'none';
-  if(themes.length) hbar('chTheme',themes.slice(0,10),TEAL);
+  if(themes.length){ $('chTheme').style.display='block'; $('themeEmpty').hidden=true; hbar('chTheme',themes.slice(0,10),TEAL); }
+  else { if(charts.chTheme){ charts.chTheme.destroy(); delete charts.chTheme; } $('chTheme').style.display='none'; $('themeEmpty').hidden=false; }
   drawCanvasViz(kws, journals);
 
   const top = [...RECS].sort((a,b)=>b.cited-a.cited).slice(0,15);
   $('topTable').innerHTML = '<tr><th>#</th><th>Başlık</th><th>Yıl</th><th>Dergi</th><th>Atıf</th><th>Kaynak</th></tr>'+
     top.map((r,i)=>`<tr><td class="num">${i+1}</td><td>${esc(r.title)}</td><td class="num">${esc(r.year||'')}</td><td>${esc(r.journal)}</td><td class="num">${esc(r.cited)}</td><td>${esc(r.src)}</td></tr>`).join('');
 }
-/* kelime bulutu, TreeMap, Sankey: piksel genişliği gerektiğinden yalnızca sekme görünürken çizilir */
+/* kelime bulutu, TreeMap, Sankey: piksel genişliği gerektiğinden yalnızca grupları görünürken çizilir */
+function isGrp(g){ return $('grp-'+g).classList.contains('on'); }
 function drawCanvasViz(kws, journals){
-  kws = kws || countMap(RECS.flatMap(r=>r.keywords));
-  journals = journals || countMap(RECS.map(r=>r.journal).filter(Boolean));
-  drawWordCloud(kws.slice(0,40));
-  drawTreemap(journals.slice(0,12), RECS.length);
-  drawSankey();
+  if(isGrp('icerik')) drawWordCloud((kws || countMap(RECS.flatMap(r=>r.keywords))).slice(0,40));
+  if(isGrp('dergi')){
+    drawTreemap((journals || countMap(RECS.map(r=>r.journal).filter(Boolean))).slice(0,12), RECS.length);
+    drawSankey();
+  }
 }
+/* analiz grupları */
+document.querySelectorAll('[data-grp]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-grp]').forEach(x=>{ x.classList.remove('on'); x.setAttribute('aria-selected','false'); });
+  document.querySelectorAll('.an-grp').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); b.setAttribute('aria-selected','true'); $('grp-'+b.dataset.grp).classList.add('on');
+  if(RECS.length) drawCanvasViz();
+}));
 
 /* ================= EDA görselleri: WordCloud / TreeMap / Sankey ================= */
 function setupCanvas(id,h){ const cv=$(id); const W=cv.width=cv.clientWidth*2; const H=cv.height=h*2; const ctx=cv.getContext('2d'); ctx.clearRect(0,0,W,H); return {cv,ctx,W,H}; }
