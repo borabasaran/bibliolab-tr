@@ -4,7 +4,7 @@
 // altı çizilmez ve rengi değişmez, yalnızca üzerine gelince altçizgi belirir.
 (function () {
   var AD = 'BiblioLab';
-  var SURUM = '1.7';
+  var SURUM = '2.0';
   var YAZAR = 'bbasaran';
   var YAZAR_URL = 'https://bbasaran.net';
 

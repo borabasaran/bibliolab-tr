@@ -4,18 +4,34 @@ Tarayıcıda çalışan, sunucusuz bibliyometrik analiz platformu: OpenAlex, TR 
 
 **Adres:** [bibliolab.bbasaran.net](https://bibliolab.bbasaran.net)
 
-Hiçbir veri veya API anahtarı bir sunucuya gönderilmez. Korpus ve anahtar yalnızca kullanıcının kendi tarayıcısında tutulur; LLM istekleri doğrudan Google'a gider.
+Korpus ve API anahtarları yalnızca kullanıcının kendi tarayıcısında tutulur. LLM istekleri, kullanıcı kendi anahtarını girdiyse doğrudan Google'a gider.
 
 ## Arayüz
 
-Uygulama altı sekmeden oluşur:
+Uygulama iki moddan oluşur ve aynı korpusu paylaşır.
 
-1. **Veri Kaynağı:** Üstte korpus şeridi (kayıt sayısı, kaynak dağılımı, bulanık mükerrer taraması, temizleme, "Analize geç"). Altında üç kaynak bölmesi: OpenAlex, Dosya yükle (TR Dizin JSON yapıştırma dahil), DergiPark. Seyrek kullanılan alanlar "Gelişmiş ayarlar" altındadır. Veri yüklenince veri sağlığı raporu görünür.
-2. **Analiz:** Özet kartları ve dört grup: Genel görünüm, Yazar ve kurum, Dergi ve kaynak, İçerik ve temalar.
-3. **Ağlar:** Anahtar kelime, ortak yazarlık, bibliyografik eşleşme ve ortak atıf ağları.
-4. **LLM Yorumu:** Tek satırlık anahtar şeridi ve üç bölme: Hazır görevler, Tematik sınıflandırma, Korpusla sohbet.
-5. **Doğrulama:** Altın Standart veri setiyle karşılaştırma.
-6. **Dışa Aktar:** CSV ve JSON çıktıları.
+**Rehberli mod (`index.html`, ana sayfa).** Bibliyometriyi bilmeyen kullanıcılar için üç adımlı akış:
+
+1. **Soru:** Bir konunun görünümü, bir derginin profili, bir araştırmacı ya da kurum, kendi verimi analiz etmek.
+2. **Kapsam:** Konu ifadesi (başlık ve özette arama, OR ile çok dilli), dergi/yazar/kurum için OpenAlex otomatik tamamlama (kimlik tabanlı eşleştirme; ISSN ile doğrudan dergi), yıl aralığı ve yayın türü. "Yayınları bul" toplam sayıyı ve en çok atıf alan örnekleri gösterir; kullanıcı ilgililiği görüp onaylar.
+3. **Rapor:** Soru başlıklı bölümler (Bu alan büyüyor mu? Hangi konular çalışılıyor? Kimler öne çıkıyor? Nerede yayımlanıyor? En çok etki yaratan yayınlar), her grafiğin altında sade dilde bulgu cümlesi ve tablo görünümü, yapay zekâ yorumu, makaleye uyarlanabilir yöntem paragrafı, sınırlılıklar listesi ve tekrarlanabilir sorgu adresi. PDF olarak kaydedilebilir, veriler CSV olarak indirilebilir.
+
+**Uzman modu (`uzman.html`).** Önceki altı sekmeli arayüzün tamamı: tüm veri kaynakları, ağlar, LLM araçları, Altın Standart doğrulaması, dışa aktarım.
+
+## Mimari
+
+- `motor.js`: iki modun ortak motoru. Ayrıştırıcılar (Scopus, BibTeX, TR Dizin, OpenAlex, Excel), OpenAlex erişimi (hız sınırı ve hata yönetimi, isteğe bağlı API anahtarı), bibliyometrik göstergeler, IndexedDB kalıcılığı ve LLM katmanı.
+- `index.html`: rehberli mod. `uzman.html`: uzman modu. `imza.js`: sürüm imzası.
+- `LLM_PROXY_URL` (motor.js): boşsa kullanıcı kendi Gemini anahtarıyla çalışır; doluysa anahtarı olmayan kullanıcılar BiblioLab ara katmanını kullanır.
+
+## Rehberli raporun göstergeleri
+
+- **Yıllık büyüme:** tamamlanmış yıllardaki yayın sayılarına log-doğrusal model; oran = e^b − 1. R² düşükse metin uyarı ekler. Süren yıl hesaba katılmaz ve grafikte gri gösterilir.
+- **Atıf etkisi:** toplam ve ortanca atıf, h-indeksi, OpenAlex FWCI (alan, yıl ve türe göre normalleştirilmiş atıf etkisi) ortancası ve FWCI > 1 olan yayın oranı.
+- **Üretkenlik:** yazar (OpenAlex kimliğiyle), kurum ve ülke düzeyinde tam ve kesirli sayım.
+- **Dergi yoğunlaşması:** Bradford yasası; yayınların ilk üçte birini taşıyan çekirdek dergiler.
+- **Tematik yapı:** OpenAlex ana konu sınıflandırması; dönemin ilk ve ikinci yarısı arasında payı artan ve azalan konular (en az 5 yayın).
+- **İşbirliği ve erişim:** yayın başına yazar, tek yazarlı yayın oranı, uluslararası ortak yayın oranı, açık erişim oranı.
 
 ## Özellikler
 
@@ -45,7 +61,7 @@ Sayfanın altındaki sürüm imzası `imza.js` içindeki `SURUM` değerinden gel
 
 ## Veri kaynakları hakkında notlar
 
-**OpenAlex (önerilen yol).** CORS açık olduğundan tarayıcıdan doğrudan çekilir. TR Dizin/DergiPark dergilerinin büyük kısmı OpenAlex'te dizinlidir; ISSN listesiyle sorgulamak hem meta veriyi hem atıf sayılarını getirir. "Polite pool" için e-posta girilmesi önerilir (Gelişmiş ayarlar).
+**OpenAlex (önerilen yol).** CORS açık olduğundan tarayıcıdan doğrudan çekilir. Anahtarsız kullanımda OpenAlex günlük ücretsiz bir kota uygular; yoğun kullanıcılar Ayarlar'dan ücretsiz OpenAlex anahtarı ekleyerek kotayı on katına çıkarabilir. TR Dizin/DergiPark dergilerinin büyük kısmı OpenAlex'te dizinlidir; ISSN listesiyle sorgulamak hem meta veriyi hem atıf sayılarını getirir. "Polite pool" için e-posta girilmesi önerilir (Gelişmiş ayarlar).
 
 **TR Dizin.** Arama servisinin JSON yanıtı dosya olarak yüklenebilir ya da Dosya yükle bölmesindeki "veya TR Dizin JSON yanıtını yapıştır" alanına yapıştırılabilir; esnek alan eşleyici yaygın alan adlarını (`title/baslik`, `authors/yazarlar`, `publicationYear/yil` vb.) tanır. TR Dizin sunucusu tarayıcıdan doğrudan çağrıya CORS izni vermeyebilir; bu yüzden JSON'u indirip yüklemek en güvenilir yoldur.
 
