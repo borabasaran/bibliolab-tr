@@ -8,7 +8,7 @@
 const LLM_PROXY_URL = '';
 const LLM_MODEL = 'gemini-3.6-flash';
 const OA_MAX = 5000;           // tek analizde çekilecek azami kayıt
-const BIBLIOLAB_SURUM = '2.0'; // yöntem metnine yazılır; imza.js ile aynı tutulur
+const BIBLIOLAB_SURUM = '2.1'; // yöntem metnine yazılır; imza.js ile aynı tutulur
 
 /* ================= küçük yardımcılar ================= */
 const $ = id => document.getElementById(id);
@@ -77,6 +77,7 @@ async function oaGet(u){
       if(deneme<2){ await new Promise(r=>setTimeout(r,1500*(deneme+1))); continue; }
       throw new OAError('OpenAlex günlük ücretsiz kullanım sınırına ulaşıldı. Ücretsiz bir OpenAlex anahtarını Ayarlar\'dan ekleyebilir ya da yarın tekrar deneyebilirsiniz.','limit');
     }
+    if(res.status===401||res.status===403) throw new OAError('OpenAlex bu isteği anahtarsız kabul etmedi (HTTP '+res.status+'). Ayarlar\'dan ücretsiz bir OpenAlex anahtarı ekleyip yeniden deneyin.','auth');
     if(res.status===400 && url.searchParams.has('select')){ url.searchParams.delete('select'); continue; } // alan seçimi reddedilirse tam kayda dön
     if(!res.ok) throw new OAError('OpenAlex isteği başarısız oldu (HTTP '+res.status+').','http');
     return res.json();
@@ -95,20 +96,20 @@ async function oaOnizle(filter){
   const j=await oaGet(u);
   return { count:(j.meta&&j.meta.count)||0, ornek:(j.results||[]).map(w=>({title:norm(w.display_name),year:w.publication_year,journal:norm(w.primary_location&&w.primary_location.source&&w.primary_location.source.display_name),cited:w.cited_by_count||0})), url:oaPublicURL(u) };
 }
-/* tüm kayıtlar: imleçli sayfalama; azami sınırı aşarsa en çok atıf alanlar alınır */
+/* tüm kayıtlar: sayfa numarasıyla sayfalama (imleçli sayfalama anahtarsız kullanımda ilk sayfayla sınırlı);
+   azami sınırı aşarsa en çok atıf alanlar alınır */
 async function oaHepsi(filter, toplam, ilerleme){
   const kesik = toplam>OA_MAX;
   const hedef = Math.min(toplam||OA_MAX, OA_MAX);
-  let cursor='*', got=[];
-  while(got.length<hedef && cursor){
-    const u=oaURL('works',{filter,'per-page':200,select:OA_FIELDS,cursor});
-    if(kesik) u.searchParams.set('sort','cited_by_count:desc');
+  const got=[], gorulen=new Set();
+  for(let page=1; got.length<hedef; page++){
+    const u=oaURL('works',{filter,'per-page':200,select:OA_FIELDS,page});
+    u.searchParams.set('sort', kesik ? 'cited_by_count:desc' : 'publication_date:desc');
     const j=await oaGet(u);
     const r=j.results||[];
-    got.push(...r.map(mapOA));
+    for(const w of r){ if(w.id&&gorulen.has(w.id)) continue; gorulen.add(w.id); got.push(mapOA(w)); }
     if(ilerleme) ilerleme(Math.min(got.length,hedef), hedef);
-    cursor=j.meta&&j.meta.next_cursor;
-    if(!r.length) break;
+    if(r.length<200) break;
   }
   return { recs:got.slice(0,hedef), kesik };
 }
