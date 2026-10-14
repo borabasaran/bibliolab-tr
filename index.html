@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BiblioLab TR: Bibliyometrik Analiz + LLM</title>
+<title>BiblioLab TR · Bibliyometrik analiz</title>
+<meta name="description" content="Bir konunun, derginin, araştırmacının ya da kurumun yayın görünümünü birkaç adımda çıkaran bibliyometrik analiz platformu.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -12,1311 +13,938 @@
 <style>
 :root{
   --ink:#1B2A41; --ink-soft:#33415C; --paper:#EFF2F6; --card:#FFFFFF;
-  --hl:#FFD34D; --teal:#2E6E5E; --brick:#A44A3F; --muted:#68738A;
-  --line:#D7DDE7; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
-  --disp:'Fraunces',serif;
+  --hl:#FFD34D; --hl-soft:#FFF4C9; --teal:#2E6E5E; --teal-soft:#E3EFEB; --brick:#A44A3F; --muted:#68738A;
+  --line:#D7DDE7; --grid:#E6EAF0; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif; --disp:'Fraunces',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.6}
 a{color:var(--teal)}
-.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+button{font:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-header{background:var(--ink);color:#fff;padding:34px 0 26px;border-bottom:6px solid var(--hl)}
-header h1{font-family:var(--disp);font-weight:700;font-size:34px;letter-spacing:-.01em}
-header h1 em{font-style:normal;background:linear-gradient(transparent 55%,var(--hl) 55%,var(--hl) 92%,transparent 92%);color:var(--ink);padding:0 6px;margin-left:2px;border-radius:2px}
-header p{color:#B8C2D6;margin-top:6px;max-width:70ch}
-header .meta{font-family:var(--mono);font-size:12px;color:#8FA0BE;margin-top:10px}
+/* üst bant */
+header{background:var(--ink);color:#fff;border-bottom:6px solid var(--hl)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:18px;padding-bottom:16px;flex-wrap:wrap}
+.brand{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:-.01em;color:#fff;text-decoration:none}
+.brand em{font-style:normal;background:linear-gradient(transparent 55%,var(--hl) 55%,var(--hl) 92%,transparent 92%);color:var(--ink);padding:0 5px;margin-left:2px;border-radius:2px}
+.top-actions{display:flex;gap:6px;align-items:center}
+.top-actions a,.top-actions button{appearance:none;border:0;background:none;color:#B8C2D6;font-size:14px;font-weight:500;padding:8px 10px;border-radius:6px;cursor:pointer;text-decoration:none}
+.top-actions a:hover,.top-actions button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.top-actions :focus-visible{outline:2px solid var(--hl);outline-offset:1px}
 
-nav{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-nav .wrap{display:flex;gap:2px;overflow-x:auto}
-nav button{appearance:none;border:0;background:none;font:inherit;font-weight:500;color:var(--muted);
-  padding:14px 16px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-nav button:hover{color:var(--ink)}
-nav button.active{color:var(--ink);border-bottom-color:var(--hl)}
-nav button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+/* adım göstergesi */
+.steps{display:flex;gap:0;list-style:none;margin:26px 0 30px;counter-reset:s;border-bottom:1px solid var(--line)}
+.steps li{counter-increment:s;padding:0 18px 12px 0;margin-right:18px;color:var(--muted);font-size:14px;font-weight:500;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.steps li::before{content:counter(s);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;font-family:var(--mono);font-size:12px;margin-right:8px}
+.steps li.on{color:var(--ink);border-bottom-color:var(--hl)}
+.steps li.done{color:var(--teal)}
+@media(max-width:560px){.steps li{font-size:0;padding-right:0;margin-right:10px}.steps li::before{font-size:12px;margin:0}.steps li.on{font-size:14px}.steps li.on::before{margin-right:8px}}
 
-main{padding:28px 0 80px}
-section.panel{display:none}
-section.panel.active{display:block}
-h2{font-family:var(--disp);font-weight:700;font-size:24px;margin-bottom:4px;position:relative;display:inline-block}
-h2::after{content:"";position:absolute;left:-4px;right:-8px;bottom:2px;height:10px;background:var(--hl);z-index:-1;transform:skewX(-8deg);opacity:.85}
-.sub{color:var(--muted);margin-bottom:22px;max-width:78ch}
-h3{font-size:16px;font-weight:600;margin:26px 0 10px}
+main{padding-bottom:90px;min-height:70vh}
+.screen{display:none}
+.screen.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.screen.on{animation:none}html{scroll-behavior:auto}}
+h1.q,h2.q{font-family:var(--disp);font-weight:700;font-size:30px;line-height:1.2;letter-spacing:-.01em;margin-bottom:8px}
+h2.q:focus,h1.q:focus{outline:none}
+.lead{color:var(--ink-soft);max-width:62ch;margin-bottom:26px;font-size:16px}
+.back{appearance:none;border:0;background:none;color:var(--muted);font-weight:500;font-size:14px;cursor:pointer;padding:4px 0;margin-bottom:10px}
+.back:hover{color:var(--ink)}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;margin-bottom:18px}
-.card.kn{border-top:4px solid var(--ink)}
-label{display:block;font-weight:500;font-size:13px;margin:12px 0 4px;color:var(--ink-soft)}
-input[type=text],input[type=password],input[type=number],textarea,select{
-  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
-textarea{font-family:var(--mono);font-size:13px;min-height:90px}
-input:focus,textarea:focus,select:focus{outline:2px solid var(--hl);outline-offset:0;border-color:var(--ink)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px}
-@media(max-width:720px){.row,.row3{grid-template-columns:1fr}}
-.btn{appearance:none;border:0;border-radius:6px;background:var(--ink);color:#fff;font:inherit;font-weight:600;
-  padding:10px 18px;cursor:pointer;margin-top:14px}
+/* ekran 1: soru kartları */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.choices{grid-template-columns:1fr}}
+.choice{appearance:none;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:22px 22px 20px;cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:4px 16px;align-items:start;transition:border-color .15s,box-shadow .15s,transform .15s}
+.choice:hover{border-color:var(--ink);box-shadow:0 6px 18px rgba(27,42,65,.08);transform:translateY(-1px)}
+.choice:focus-visible{outline:3px solid var(--hl);outline-offset:2px;border-color:var(--ink)}
+.choice .ic{grid-row:span 2;width:44px;height:44px;border-radius:10px;background:var(--hl-soft);display:grid;place-items:center;color:var(--ink)}
+.choice b{font-size:17px;font-weight:600}
+.choice span{color:var(--muted);font-size:14px;line-height:1.5}
+.resume{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:8px;padding:14px 18px;margin-bottom:22px}
+.resume p{font-size:14.5px}
+.resume small{display:block;color:var(--muted);font-size:13px}
+.how{margin-top:34px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;color:var(--ink-soft);font-size:14px}
+.how b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:2px}
+@media(max-width:720px){.how{grid-template-columns:1fr}}
+
+/* formlar */
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px}
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+label.lb{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.help{font-size:13.5px;color:var(--muted);margin-top:6px}
+input[type=text],input[type=number],input[type=password],input[type=search]{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+input:focus{outline:3px solid var(--hl-soft);border-color:var(--ink)}
+.big-input{font-size:17px !important;padding:13px 15px !important}
+.years{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.years input{width:110px}
+.check{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;cursor:pointer;margin-top:4px}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.row2{grid-template-columns:1fr}}
+.examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.examples span{font-size:13px;color:var(--muted);margin-right:2px}
+.ex{appearance:none;border:1px dashed var(--line);background:var(--paper);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--ink-soft);font-family:var(--mono)}
+.ex:hover{border-color:var(--ink);color:var(--ink)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.seg button{appearance:none;border:0;background:#fff;padding:8px 16px;font-weight:500;cursor:pointer;color:var(--ink)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:3px solid var(--hl);outline-offset:-3px}
+
+.btn{appearance:none;border:0;border-radius:8px;background:var(--ink);color:#fff;font-weight:600;padding:12px 22px;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .btn:hover{background:var(--ink-soft)}
+.btn:disabled{opacity:.45;cursor:default}
 .btn.alt{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
 .btn.alt:hover{background:var(--paper)}
-.btn:disabled{opacity:.45;cursor:default}
-.btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
-.status{font-family:var(--mono);font-size:13px;margin-top:12px;padding:10px 12px;border-radius:6px;background:var(--paper);border:1px dashed var(--line);white-space:pre-wrap}
-.status.ok{border-color:var(--teal);color:var(--teal)}
-.status.err{border-color:var(--brick);color:var(--brick)}
-.key-bar{display:flex;align-items:center;justify-content:space-between;gap:8px 24px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
-  border-left:4px solid var(--hl);border-radius:8px;padding:12px 16px 6px;margin-bottom:18px}
-.kb-field{flex:1 1 340px;max-width:600px}
-.kb-field label{margin-top:0}
-.kb-row{display:flex;gap:8px}
-.kb-row input{flex:1;min-width:0}
-.kb-link{font-size:13px;font-weight:500;color:var(--teal)}
-.key-bar .status{flex-basis:100%;margin:0 0 8px}
-.key-state{display:block;min-height:20px;margin-top:5px;font-family:var(--mono);font-size:12px;color:var(--muted)}
-.key-state.ready{color:var(--teal)}
+.btn.ghost{background:none;color:var(--ink-soft);padding:12px 10px}
+.btn.ghost:hover{color:var(--ink);background:var(--card)}
+.btn.sm{padding:8px 14px;font-size:14px}
+.btn:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 22px}
-@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--hl);border-radius:6px;padding:14px 14px 10px}
-.stat b{display:block;font-family:var(--mono);font-size:24px;font-weight:500}
-.stat span{font-size:12.5px;color:var(--muted)}
-.an-groups{margin:0 0 2px}
-.an-grp{display:none;margin-top:16px}
-.an-grp.on{display:block}
+/* otomatik tamamlama */
+.ac{position:relative}
+.ac ul{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);list-style:none;background:#fff;border:1.5px solid var(--ink);border-radius:8px;box-shadow:0 10px 24px rgba(27,42,65,.12);max-height:340px;overflow-y:auto;display:none}
+.ac ul.on{display:block}
+.ac li{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--grid)}
+.ac li:last-child{border-bottom:0}
+.ac li[aria-selected=true],.ac li:hover{background:var(--hl-soft)}
+.ac li b{display:block;font-weight:600;font-size:14.5px}
+.ac li small{color:var(--muted);font-size:12.5px}
+.ac li.note{cursor:default;color:var(--muted);font-size:13.5px;background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--hl-soft);border:1px solid #E9D48A;border-radius:999px;padding:5px 6px 5px 12px;font-size:14px}
+.chip small{color:var(--muted);font-size:12px}
+.chip button{appearance:none;border:0;background:none;width:22px;height:22px;border-radius:50%;cursor:pointer;color:var(--ink-soft);font-size:16px;line-height:1}
+.chip button:hover{background:rgba(27,42,65,.1)}
 
-.chartbox{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:18px}
-.chartbox h4{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--ink-soft)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+/* dosya bırakma alanı */
+.drop{border:2px dashed var(--line);border-radius:10px;padding:34px 20px;text-align:center;background:var(--paper);cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--ink);background:var(--hl-soft)}
+.drop b{display:block;font-size:16px;margin-bottom:4px}
+.drop span{font-size:13.5px;color:var(--muted)}
+.drop:focus-within{outline:3px solid var(--hl);outline-offset:2px}
+
+/* önizleme */
+.preview{margin-top:22px;display:none}
+.preview.on{display:block}
+.pv-count{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.pv-count b{font-size:40px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.pv-count span{font-size:16px;color:var(--ink-soft)}
+.pv-list{list-style:none;margin:14px 0 0;border-top:1px solid var(--grid)}
+.pv-list li{padding:10px 0;border-bottom:1px solid var(--grid);font-size:14.5px}
+.pv-list small{display:block;color:var(--muted);font-size:13px}
+.note{border-radius:8px;padding:12px 14px;font-size:14px;margin-top:14px;background:var(--paper);border-left:4px solid var(--muted)}
+.note.warn{background:#FFF8E1;border-left-color:#C9A227}
+.note.err{background:#FBECEA;border-left-color:var(--brick);color:#6E2B24}
+.note.ok{background:var(--teal-soft);border-left-color:var(--teal)}
+.progress{height:8px;background:var(--grid);border-radius:999px;overflow:hidden;margin-top:14px}
+.progress i{display:block;height:100%;width:0;background:var(--teal);border-radius:999px;transition:width .3s}
+.prog-txt{font-size:14px;color:var(--ink-soft);margin-top:8px;font-variant-numeric:tabular-nums}
+
+/* ================= rapor ================= */
+.r-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+.r-head .meta{font-size:14px;color:var(--muted);margin-top:4px}
+.r-actions{display:flex;gap:8px;flex-wrap:wrap}
+.toc{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 26px;position:sticky;top:0;z-index:10;background:var(--paper);padding:10px 0;border-bottom:1px solid var(--line)}
+.toc a{font-size:13.5px;color:var(--ink-soft);text-decoration:none;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+.toc a:hover{border-color:var(--ink);color:var(--ink)}
+@media(max-width:720px){.toc{position:static;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.toc a{white-space:nowrap}}
+.tiles{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:12px}
+@media(max-width:860px){.tiles{grid-template-columns:1fr 1fr}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px}
+.tile .lbl{font-size:13px;color:var(--muted);font-weight:500}
+.tile .val{font-size:28px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile .sub{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.tile.hero{grid-row:span 2;border-left:5px solid var(--hl);display:flex;flex-direction:column;justify-content:center}
+.tile.hero .val{font-size:56px}
+@media(max-width:860px){.tile.hero{grid-column:span 2;grid-row:auto}}
+.sec{margin-top:46px;scroll-margin-top:64px}
+.sec > h2{font-family:var(--disp);font-weight:700;font-size:24px;line-height:1.25;margin-bottom:6px}
+.sec > .ans{font-size:16px;color:var(--ink-soft);max-width:72ch;margin-bottom:16px}
+.sec > .ans strong{color:var(--ink);font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 18px 12px;margin-bottom:16px}
+.panel h3{font-size:15px;font-weight:600;margin-bottom:2px}
+.panel .ph{font-size:13px;color:var(--muted);margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid2 > *{min-width:0}
 @media(max-width:860px){.grid2{grid-template-columns:1fr}}
-canvas.net{width:100%;background:var(--card);border:1px solid var(--line);border-radius:8px}
+.cbox{position:relative;width:100%}
+details.tbl{margin-top:10px;border-top:1px solid var(--grid);padding-top:8px}
+details.tbl summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:500;padding:2px 0}
+details.tbl summary:hover{color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tscroll{overflow-x:auto}
+.kw{display:flex;flex-wrap:wrap;gap:6px}
+.kw span{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:13.5px}
+.kw span i{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:4px;font-size:12.5px}
+.delta{font-variant-numeric:tabular-nums;white-space:nowrap}
+.delta.up{color:var(--teal)}
+.delta.down{color:var(--brick)}
+.ai{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:10px;padding:20px 22px;margin-top:16px}
+.ai h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ai h3 small{font-weight:500;color:var(--muted);font-size:12.5px}
+.ai p{margin-bottom:12px;max-width:75ch}
+.ai .foot{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--grid);padding-top:10px;margin-top:4px}
+.ai .wait{color:var(--muted);font-size:14.5px}
+.ai.off{border-left-color:var(--line)}
+.method p{max-width:78ch;margin-bottom:12px}
+.method ul{margin:6px 0 14px 20px}
+.method li{margin-bottom:6px;max-width:75ch}
+code.q{display:block;font-family:var(--mono);font-size:12.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:10px 12px;word-break:break-all;margin:6px 0 4px}
+.copy-ok{font-size:13px;color:var(--teal);margin-left:6px}
 
-table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card)}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-th{font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-td.num{font-family:var(--mono)}
+/* ayarlar */
+dialog{border:0;border-radius:12px;padding:0;max-width:560px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(27,42,65,.3);color:var(--ink)}
+dialog::backdrop{background:rgba(27,42,65,.45)}
+.dlg{padding:24px}
+.dlg h2{font-family:var(--disp);font-size:22px;margin-bottom:4px}
+.dlg .lead{font-size:14px;margin-bottom:18px}
 
-.llm-out{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:8px;
-  padding:20px;margin-top:18px;white-space:pre-wrap;line-height:1.65;display:none}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.chip{border:1.5px solid var(--ink);background:#fff;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:500}
-.chip:hover,.chip.on{background:var(--hl);border-color:var(--ink)}
-.empty{color:var(--muted);font-style:italic;padding:30px 0;text-align:center}
-.msg{border-radius:8px;padding:10px 14px;margin:8px 0;max-width:92%;white-space:pre-wrap}
-.msg.u{background:var(--ink);color:#fff;margin-left:auto}
-.msg.a{background:var(--paper);border:1px solid var(--line)}
-.corpus-bar{position:sticky;top:var(--navh,52px);z-index:15;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  background:var(--card);border:1px solid var(--line);border-left:4px solid var(--hl);border-radius:8px;padding:12px 16px;margin-bottom:18px;box-shadow:0 2px 10px rgba(27,42,65,.07)}
-.cb-info{display:flex;flex-direction:column;gap:2px;min-width:0}
-.cb-info b{font-family:var(--mono);font-size:17px;font-weight:500}
-.cb-src{font-size:12.5px;color:var(--muted)}
-.cb-actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn.sm{margin-top:0;padding:7px 14px;font-size:13.5px}
-.src-card{padding:0;overflow:hidden}
-.src-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);background:var(--paper);overflow-x:auto}
-.src-tabs button{appearance:none;border:0;background:none;font:inherit;font-weight:500;color:var(--muted);padding:12px 18px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-.src-tabs button:hover{color:var(--ink)}
-.src-tabs button.on{color:var(--ink);background:var(--card);border-bottom-color:var(--hl)}
-.src-tabs button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
-.src-tabs small{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--teal);margin-left:4px}
-.src-pane{display:none;padding:20px}
-.src-pane.on{display:block}
-@media(max-width:720px){.corpus-bar{position:static}}
-details.adv{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
-details.adv summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-soft)}
-details.adv[open] summary{margin-bottom:2px}
-footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-size:12.5px}
-@media (prefers-reduced-motion: no-preference){ .panel.active{animation:fade .25s ease} @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}} }
+footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-size:13px}
+footer .wrap{display:flex;flex-direction:column;gap:4px}
+
+@media print{
+  header,.steps,.r-actions,.toc,details.tbl summary,.ai .foot button,footer .bb-imza,.no-print{display:none !important}
+  body{background:#fff;font-size:11pt}
+  .screen{display:none !important} #s3{display:block !important}
+  details.tbl{display:none}
+  .panel,.tile,.ai{break-inside:avoid;border-color:#ccc}
+  .sec{margin-top:24px;break-before:auto}
+  .sec > h2{break-after:avoid}
+}
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <h1>Biblio<em>Lab</em> TR</h1>
-    <p>Tarayıcıda çalışan bibliyometrik analiz platformu: OpenAlex, TR Dizin, DergiPark (OAI-PMH), Scopus/WoS dosyaları ve üstüne LLM destekli yorumlama katmanı. Verileriniz ve API anahtarınız bu tarayıcıdan dışarı çıkmaz.</p>
-    <div class="meta">durum: <span id="recCount">0</span> kayıt yüklü · sunucusuz</div>
+    <a class="brand" href="./" aria-label="BiblioLab TR ana sayfa">Biblio<em>Lab</em> TR</a>
+    <nav class="top-actions" aria-label="Üst menü">
+      <button type="button" id="ayarAc">Ayarlar</button>
+      <a href="uzman.html">Uzman modu</a>
+    </nav>
   </div>
 </header>
 
-<nav><div class="wrap">
-  <button class="active" data-t="veri">1 · Veri Kaynağı</button>
-  <button data-t="analiz">2 · Analiz</button>
-  <button data-t="ag">3 · Ağlar</button>
-  <button data-t="llm">4 · LLM Yorumu</button>
-  <button data-t="dogrulama">5 · Doğrulama</button>
-  <button data-t="disa">6 · Dışa Aktar</button>
-</div></nav>
-
 <main class="wrap">
+  <ol class="steps" id="steps" aria-label="Adımlar">
+    <li data-s="1">Soru</li>
+    <li data-s="2">Kapsam</li>
+    <li data-s="3">Rapor</li>
+  </ol>
 
-<!-- ============ VERİ ============ -->
-<section class="panel active" id="p-veri">
-  <h2>Veri Kaynağı</h2>
-  <p class="sub">Korpusu bir ya da birden fazla kaynaktan oluşturun. Kaynaklar birleştirilir; DOI veya başlığı aynı olan kayıtlar otomatik ayıklanır. Korpus yalnızca bu tarayıcıda saklanır, sayfayı yenilediğinizde kaldığınız yerden devam edersiniz.</p>
-
-  <div class="corpus-bar" id="corpusBar">
-    <div class="cb-info">
-      <b><span id="recCount2">0</span> kayıt korpusta</b>
-      <span class="cb-src" id="srcSummary">Henüz veri yüklenmedi. Aşağıdan bir kaynak seçin.</span>
-      <span class="cb-src" id="restoreNote" hidden></span>
-    </div>
-    <div class="cb-actions">
-      <button class="btn alt sm" id="fuzzyBtn" disabled>Bulanık mükerrer taraması</button>
-      <button class="btn alt sm" id="clearBtn" disabled>Korpusu temizle</button>
-      <button class="btn sm" id="goAnaliz" hidden>Analize geç →</button>
-    </div>
-  </div>
-
-  <div class="card kn src-card">
-    <div class="src-tabs" role="tablist" aria-label="Veri kaynağı">
-      <button role="tab" class="on" aria-selected="true" data-pane="src-oa">OpenAlex <small>önerilen</small></button>
-      <button role="tab" aria-selected="false" data-pane="src-dosya">Dosya yükle</button>
-      <button role="tab" aria-selected="false" data-pane="src-oai">DergiPark</button>
-    </div>
-
-    <div class="src-pane on" id="src-oa" role="tabpanel">
-      <p class="hint" style="margin-top:0">TR Dizin ve DergiPark dergilerinin çoğu OpenAlex'te dizinlidir. ISSN listesiyle ulusal dergilerin tüm yayınlarını çekebilirsiniz; bu yol atıf sayılarını ve kaynakçaları da getirir.</p>
-      <div class="row">
-        <div><label for="oaIssn">ISSN listesi (virgülle)</label><input type="text" id="oaIssn" placeholder="örn. 1300-1272, 2602-2567"></div>
-        <div><label for="oaSearch">Arama terimi (isteğe bağlı)</label><input type="text" id="oaSearch" placeholder="örn. Deutsch als Fremdsprache"></div>
+  <!-- ============ EKRAN 1: SORU ============ -->
+  <section class="screen" id="s1" aria-labelledby="s1h">
+    <div class="resume" id="resume" hidden>
+      <p><b>Son analiziniz:</b> <span id="resumeTxt"></span><small id="resumeMeta"></small></p>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" id="resumeGo">Raporu aç</button>
+        <button class="btn ghost sm" id="resumeDel">Sil</button>
       </div>
-      <div class="row">
-        <div><label for="oaY1">Başlangıç yılı</label><input type="number" id="oaY1" value="2015"></div>
-        <div><label for="oaY2">Bitiş yılı</label><input type="number" id="oaY2" value="2026"></div>
-      </div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" id="oaArt" checked style="width:auto"> Yalnızca makaleler (type:article)</label>
-      <details class="adv">
-        <summary>Gelişmiş ayarlar</summary>
-        <div class="row">
-          <div><label for="oaMax">Azami kayıt (en çok 5000)</label><input type="number" id="oaMax" value="1000" max="5000"></div>
-          <div><label for="oaMail">E-posta (OpenAlex "polite pool", isteğe bağlı)</label><input type="text" id="oaMail" placeholder="ornek@anadolu.edu.tr"></div>
+    </div>
+    <h1 class="q" id="s1h" tabindex="-1">Ne öğrenmek istiyorsunuz?</h1>
+    <p class="lead">Bir başlangıç noktası seçin. BiblioLab yayınları bulur, göstergeleri hesaplar ve makalenize aktarabileceğiniz bir rapor hazırlar.</p>
+    <div class="choices">
+      <button class="choice" data-mod="konu">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+        <b>Bir konunun görünümü</b>
+        <span>Bir araştırma alanında neler yazılmış, nasıl gelişmiş, kimler öne çıkıyor?</span>
+      </button>
+      <button class="choice" data-mod="dergi">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h6M8 12h6"/></svg></span>
+        <b>Bir derginin profili</b>
+        <span>Bir ya da birkaç dergi hangi konularda, kimlerle ve ne etkiyle yayın yapıyor?</span>
+      </button>
+      <button class="choice" data-mod="kisi">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>
+        <b>Bir araştırmacı ya da kurum</b>
+        <span>Bir kişinin veya üniversitenin üretimi, işbirlikleri ve etkisi.</span>
+      </button>
+      <button class="choice" data-mod="dosya">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3m0 0-4 4m4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg></span>
+        <b>Kendi verimi analiz etmek</b>
+        <span>Scopus, Web of Science, TR Dizin ya da kendi Excel tablonuz.</span>
+      </button>
+    </div>
+    <div class="how">
+      <div><b>Açık veri</b>OpenAlex'teki 250 milyonu aşkın yayın kaydı; TR Dizin ve DergiPark dergilerinin çoğu dahil.</div>
+      <div><b>Yöntemi şeffaf</b>Her rapor, makalenize uyarlayabileceğiniz bir yöntem paragrafı ve tekrarlanabilir sorgu adresiyle gelir.</div>
+      <div><b>Verileriniz sizde</b>Analiz tarayıcınızda çalışır; yüklediğiniz dosyalar hiçbir sunucuya gönderilmez.</div>
+    </div>
+  </section>
+
+  <!-- ============ EKRAN 2: KAPSAM ============ -->
+  <section class="screen" id="s2" aria-labelledby="s2h">
+    <button class="back" id="back1">← Başka bir soru seçin</button>
+    <h2 class="q" id="s2h" tabindex="-1"></h2>
+    <p class="lead" id="s2lead"></p>
+
+    <div class="card">
+      <!-- konu -->
+      <div class="mod-f" data-for="konu">
+        <div class="field">
+          <label class="lb" for="konuQ">Konu</label>
+          <input type="search" class="big-input" id="konuQ" placeholder="örn. &quot;Deutsch als Fremdsprache&quot; OR &quot;Almanca öğretimi&quot;" autocomplete="off">
+          <p class="help">Başlığında ya da özetinde bu ifadeler geçen yayınlar aranır. Kalıpları tırnak içine alın; farklı dillerdeki karşılıkları <b>OR</b> ile ekleyin.</p>
+          <div class="examples"><span>Örnekler:</span>
+            <button type="button" class="ex">"Deutsch als Fremdsprache" OR "Almanca öğretimi"</button>
+            <button type="button" class="ex">"flipped classroom" OR "ters yüz sınıf"</button>
+            <button type="button" class="ex">"teacher burnout" OR "öğretmen tükenmişliği"</button>
+          </div>
         </div>
-      </details>
-      <button class="btn" id="oaGo">OpenAlex'ten çek</button>
-      <div class="status" id="oaStat" hidden></div>
-    </div>
-
-    <div class="src-pane" id="src-dosya" role="tabpanel">
-      <p class="hint" style="margin-top:0">Desteklenen biçimler: Scopus <b>.csv</b>, Scopus/WoS <b>.bib</b>, OpenAlex <b>.json</b> / <b>.csv</b>, TR Dizin arama servisi <b>.json</b> çıktısı, manuel veri tablosu <b>.xlsx</b> / <b>.csv</b> (sütunlar: baslik, yazarlar, yil, dergi, tur, anahtar_kelimeler, ozet, kurum, doi, tema). Birden fazla dosya aynı anda seçilebilir.</p>
-      <label for="fileIn">Dosya seç</label>
-      <input type="file" id="fileIn" accept=".csv,.bib,.json,.txt,.xlsx" multiple>
-      <div class="status" id="fileStat" hidden></div>
-      <details class="adv">
-        <summary>veya TR Dizin JSON yanıtını yapıştır</summary>
-        <label for="trJson">JSON içeriği</label>
-        <textarea id="trJson" placeholder='{"hits":{"hits":[...]}}'></textarea>
-        <button class="btn" id="trGo">JSON'u içe aktar</button>
-        <div class="status" id="trStat" hidden></div>
-      </details>
-    </div>
-
-    <div class="src-pane" id="src-oai" role="tabpanel">
-      <p class="hint" style="margin-top:0">DergiPark dergi bazında OAI-PMH sunar (örn. <code>https://dergipark.org.tr/api/public/oai/&lt;dergi-kisaltmasi&gt;/</code>). Bu kayıtlar kaynakça içermez; atıf ağları için OpenAlex'i kullanın.</p>
-      <label for="oaiUrl">OAI uç noktası</label>
-      <input type="text" id="oaiUrl" placeholder="https://dergipark.org.tr/api/public/oai/...">
-      <details class="adv">
-        <summary>Gelişmiş ayarlar</summary>
-        <label for="oaiProxy">CORS proxy öneki (tarayıcı erişimi engellenirse)</label>
-        <input type="text" id="oaiProxy" placeholder="https://benim-worker.workers.dev/?url=">
-      </details>
-      <button class="btn" id="oaiGo">OAI'den hasat et</button>
-      <div class="status" id="oaiStat" hidden></div>
-    </div>
-  </div>
-
-  <div class="card" id="healthCard" style="display:none">
-    <h3 style="margin-top:0">Veri sağlığı raporu</h3>
-    <p class="hint">Alan doluluk oranları. %70'in altındaki alanlar analiz güvenilirliğini düşürür; ilgili analizlerde bu sınırlılığı raporlayın.</p>
-    <div style="overflow-x:auto"><table id="healthTable"></table></div>
-    <div class="status" id="fuzzyStat" hidden></div>
-  </div>
-</section>
-
-<!-- ============ ANALİZ ============ -->
-<section class="panel" id="p-analiz">
-  <h2>Analiz</h2>
-  <p class="sub">Korpusun betimsel görünümü. Atıf ağı analizleri (ortak atıf, RPYS vb.) yalnızca kaynakça taşıyan OpenAlex kayıtlarında anlamlıdır; TR Dizin ve DergiPark meta verisi kaynakça içermez.</p>
-  <div id="anEmpty" class="empty">Önce 1. sekmeden veri yükleyin.</div>
-  <div id="anBody" style="display:none">
-    <div class="stats" id="statCards"></div>
-    <div class="chips an-groups" role="tablist" aria-label="Analiz grupları">
-      <button class="chip on" role="tab" aria-selected="true" data-grp="genel">Genel görünüm</button>
-      <button class="chip" role="tab" aria-selected="false" data-grp="yazar">Yazar ve kurum</button>
-      <button class="chip" role="tab" aria-selected="false" data-grp="dergi">Dergi ve kaynak</button>
-      <button class="chip" role="tab" aria-selected="false" data-grp="icerik">İçerik ve temalar</button>
-    </div>
-
-    <div class="an-grp on" id="grp-genel" role="tabpanel">
-      <div class="grid2">
-        <div class="chartbox"><h4>Yıllara göre yayın</h4><canvas id="chYear"></canvas></div>
-        <div class="chartbox"><h4>Yıllara göre toplam atıf</h4><canvas id="chCit"></canvas></div>
-        <div class="chartbox"><h4>Yayın türleri</h4><canvas id="chType"></canvas></div>
-        <div class="chartbox"><h4>Dillere göre dağılım</h4><canvas id="chLang"></canvas></div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="konuTR"> <span>Yalnızca en az bir yazarı Türkiye'deki bir kurumda bulunan yayınlar</span></label>
+        </div>
       </div>
-      <div class="chartbox" style="overflow-x:auto"><h4>En çok atıf alan 15 yayın</h4><table id="topTable"></table></div>
-    </div>
-
-    <div class="an-grp" id="grp-yazar" role="tabpanel">
-      <div class="grid2">
-        <div class="chartbox"><h4>En üretken 10 yazar</h4><canvas id="chAuth"></canvas></div>
-        <div class="chartbox"><h4>En üretken 10 kurum</h4><canvas id="chInst"></canvas></div>
+      <!-- dergi -->
+      <div class="mod-f" data-for="dergi">
+        <div class="field">
+          <label class="lb" for="dergiIn">Dergi</label>
+          <div class="ac">
+            <input type="text" class="big-input" id="dergiIn" placeholder="Dergi adını ya da ISSN'ini yazın" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="dergiList" aria-autocomplete="list">
+            <ul id="dergiList" role="listbox" aria-label="Dergi önerileri"></ul>
+          </div>
+          <div class="chips" id="dergiChips" aria-live="polite"></div>
+          <p class="help">Birden fazla dergi seçebilirsiniz. Aradığınız dergi çıkmazsa ISSN'ini yazıp Enter'a basın.</p>
+        </div>
       </div>
-      <div class="chartbox"><h4>Ülkelere göre dağılım (coğrafi işbirliği)</h4><canvas id="chCountry"></canvas></div>
-    </div>
-
-    <div class="an-grp" id="grp-dergi" role="tabpanel">
-      <div class="grid2">
-        <div class="chartbox"><h4>En üretken 10 dergi</h4><canvas id="chJour"></canvas></div>
-        <div class="chartbox"><h4>Dergi payları (TreeMap)</h4><canvas id="tmCanvas" style="width:100%" height="340"></canvas></div>
+      <!-- kişi / kurum -->
+      <div class="mod-f" data-for="kisi">
+        <div class="seg" role="group" aria-label="Neyi inceleyeceksiniz?">
+          <button type="button" aria-pressed="true" data-kt="authors">Araştırmacı</button>
+          <button type="button" aria-pressed="false" data-kt="institutions">Kurum</button>
+        </div>
+        <div class="field">
+          <label class="lb" for="kisiIn" id="kisiLb">Araştırmacı</label>
+          <div class="ac">
+            <input type="text" class="big-input" id="kisiIn" placeholder="Ad soyad yazın" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="kisiList" aria-autocomplete="list">
+            <ul id="kisiList" role="listbox" aria-label="Öneriler"></ul>
+          </div>
+          <div class="chips" id="kisiChips" aria-live="polite"></div>
+          <p class="help" id="kisiHelp">Aynı kişiye ait birden fazla profil görürseniz hepsini seçin; OpenAlex bazen bir araştırmacının yayınlarını ayrı profillere böler. Kurum adı altta görünür.</p>
+        </div>
       </div>
-      <div class="chartbox"><h4>Kaynak → Dergi akışı (Sankey)</h4><canvas id="skCanvas" style="width:100%" height="340"></canvas></div>
-    </div>
+      <!-- dosya -->
+      <div class="mod-f" data-for="dosya">
+        <label class="drop" id="drop">
+          <input type="file" id="fileIn" class="sr" accept=".csv,.bib,.json,.txt,.xlsx" multiple>
+          <b>Dosyalarınızı buraya bırakın ya da seçmek için tıklayın</b>
+          <span>Scopus (.csv, .bib) · Web of Science (.bib) · TR Dizin (.json) · OpenAlex (.json, .csv) · Excel tablosu (.xlsx, .csv)</span>
+        </label>
+        <p class="help">Excel tablonuzda şu sütun adlarını kullanın: baslik, yazarlar, yil, dergi, anahtar_kelimeler, ozet, kurum, doi. Birden fazla dosya birleştirilir, yinelenen kayıtlar ayıklanır.</p>
+        <div id="fileNote"></div>
+      </div>
 
-    <div class="an-grp" id="grp-icerik" role="tabpanel">
-      <div class="chartbox"><h4>Anahtar kelime bulutu (WordCloud)</h4><canvas id="wcCanvas" style="width:100%" height="380"></canvas></div>
-      <div class="grid2">
-        <div class="chartbox"><h4>En sık 12 anahtar kelime</h4><canvas id="chKw"></canvas></div>
-        <div class="chartbox" id="themeBox"><h4>LLM tematik sınıflandırma dağılımı</h4><canvas id="chTheme"></canvas><p class="empty" id="themeEmpty" style="padding:20px 0">Henüz tematik sınıflandırma yapılmadı. LLM Yorumu sekmesinden "Korpusu tematik sınıflandır" ile oluşturabilirsiniz.</p></div>
+      <!-- ortak: yıl ve tür -->
+      <div class="row2" id="ortakAlan" style="margin-top:18px">
+        <div class="field">
+          <span class="lb" id="yilLb">Yayın yılları</span>
+          <div class="years" role="group" aria-labelledby="yilLb">
+            <input type="number" id="y1" min="1900" max="2100" aria-label="Başlangıç yılı" placeholder="ilk">
+            <span aria-hidden="true">–</span>
+            <input type="number" id="y2" min="1900" max="2100" aria-label="Bitiş yılı" placeholder="son">
+          </div>
+          <p class="help">Boş bırakılan uç sınırsız sayılır.</p>
+        </div>
+        <div class="field">
+          <span class="lb">Yayın türü</span>
+          <label class="check"><input type="checkbox" id="sadeceMakale" checked> <span>Yalnızca dergi makaleleri</span></label>
+          <p class="help">Kapalıysa kitap, bölüm, bildiri ve tezler de dahil edilir.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="bulBtn">Yayınları bul</button>
+      </div>
+      <div id="formNote" aria-live="polite"></div>
+
+      <div class="preview" id="preview" aria-live="polite">
+        <div class="pv-count"><b id="pvN">0</b><span id="pvTxt">yayın bulundu</span></div>
+        <div id="pvSample"></div>
+        <div id="pvWarn"></div>
+        <div class="actions">
+          <button class="btn" id="raporBtn">Raporu oluştur</button>
+          <button class="btn ghost" id="duzeltBtn">Kapsamı değiştir</button>
+        </div>
+        <div id="prog" hidden>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progBar"><i id="progI"></i></div>
+          <div class="prog-txt" id="progTxt"></div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ============ AĞLAR ============ -->
-<section class="panel" id="p-ag">
-  <h2>Ağlar</h2>
-  <p class="sub">Ortak yazarlık, anahtar kelime birlikte-görülme, bibliyografik eşleşme ve ortak atıf ağları. Atıf ağları yalnızca kaynakça verisi taşıyan OpenAlex kaynaklı kayıtlarla kurulabilir; TR Dizin/DergiPark kayıtları kaynakça içermez.</p>
-  <div id="agEmpty" class="empty">Önce 1. sekmeden veri yükleyin.</div>
-  <div id="agBody" style="display:none">
-    <div class="chips">
-      <button class="chip on" data-net="kw">Anahtar kelime ağı</button>
-      <button class="chip" data-net="auth">Ortak yazarlık ağı</button>
-      <button class="chip" data-net="bc">Bibliyografik eşleşme</button>
-      <button class="chip" data-net="cc">Ortak atıf ağı</button>
-    </div>
-    <div style="margin-top:14px"><canvas class="net" id="netCanvas" height="560"></canvas></div>
-    <h3>En güçlü 15 bağ</h3>
-    <div class="chartbox" style="overflow-x:auto"><table id="edgeTable"></table></div>
-  </div>
-</section>
-
-<!-- ============ LLM ============ -->
-<section class="panel" id="p-llm">
-  <h2>LLM Yorumu</h2>
-  <p class="sub">Korpus özeti, en sık terimler ve örnek özetler Google Gemini'a gönderilir; model bulguları akademik dille yorumlar. Anahtarınız yalnızca bu tarayıcının yerel deposunda tutulur.</p>
-
-  <div class="key-bar">
-    <div class="kb-field">
-      <label for="llmKey">Gemini API anahtarı</label>
-      <div class="kb-row">
-        <input type="password" id="llmKey" placeholder="AIza..." autocomplete="off" aria-describedby="llmKeyState">
-        <button class="btn alt sm" id="llmTest">Bağlantıyı dene</button>
-      </div>
-      <span class="key-state" id="llmKeyState" aria-live="polite"></span>
-    </div>
-    <a class="kb-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Anahtarınız yok mu? Google AI Studio'da oluşturun →</a>
-    <div class="status" id="llmSetupStat" hidden aria-live="polite"></div>
-  </div>
-
-  <div class="card kn src-card">
-    <div class="src-tabs" role="tablist" aria-label="LLM araçları">
-      <button role="tab" class="on" aria-selected="true" data-pane="llm-gorev">Hazır görevler</button>
-      <button role="tab" aria-selected="false" data-pane="llm-tema">Tematik sınıflandırma</button>
-      <button role="tab" aria-selected="false" data-pane="llm-sohbet">Korpusla sohbet</button>
-    </div>
-
-    <div class="src-pane on" id="llm-gorev" role="tabpanel">
-      <p class="hint" style="margin-top:0">Bir görev seçin; istem kutuya gelir, isterseniz düzenleyip gönderin. Korpus özeti isteme otomatik eklenir.</p>
-      <div class="chips">
-        <button class="chip" data-p="yorum">Bulguları yorumla</button>
-        <button class="chip" data-p="yontem">Yöntem paragrafı taslağı</button>
-        <button class="chip" data-p="tema">Tematik sentez</button>
-        <button class="chip" data-p="bosluk">Araştırma boşlukları</button>
-        <button class="chip" data-p="karar">Karar destek raporu (pilot senaryo)</button>
-      </div>
-      <label for="llmPrompt">İstem (düzenlenebilir)</label>
-      <textarea id="llmPrompt" placeholder="Bir hazır görev seçin veya kendi isteminizi yazın."></textarea>
-      <button class="btn" id="llmGo">Modele gönder</button>
-      <div class="status" id="llmStat" hidden></div>
-      <div class="llm-out" id="llmOut"></div>
-    </div>
-
-    <div class="src-pane" id="llm-tema" role="tabpanel">
-      <p class="hint" style="margin-top:0">Model, kayıtları başlık ve anahtar kelimelerden hareketle 5–8 temaya atar. Sonuç korpusa yazılır: Analiz sekmesinde "İçerik ve temalar" grafiği ve dışa aktarımda "tema" sütunu oluşur; Doğrulama sekmesinde Altın Standart kodlamayla karşılaştırılabilir.</p>
-      <button class="btn" id="themeGo">Korpusu tematik sınıflandır</button>
-      <div class="status" id="themeStat" hidden></div>
-    </div>
-
-    <div class="src-pane" id="llm-sohbet" role="tabpanel">
-      <p class="hint" style="margin-top:0">Çok turlu sohbet: model korpus özetini bağlam olarak alır ve önceki soruları hatırlar. Göndermek için Ctrl+Enter da kullanılabilir.</p>
-      <div id="chatLog" style="max-height:380px;overflow-y:auto;margin:10px 0"></div>
-      <label for="chatIn">Sorunuz</label>
-      <textarea id="chatIn" style="min-height:60px" placeholder="örn. En üretken üç yazarın tematik yönelimleri arasında fark var mı?"></textarea>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="chatGo">Sor</button>
-        <button class="btn alt" id="chatClear">Sohbeti sıfırla</button>
-      </div>
-      <div class="status" id="chatStat" hidden></div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ DOĞRULAMA ============ -->
-<section class="panel" id="p-dogrulama">
-  <h2>Doğrulama</h2>
-  <p class="sub">Korpusu elle hazırlanmış Altın Standart veri setiyle karşılaştırır: kayıt eşleşmesi için precision, recall ve F1-score; anahtar kelime ve tema kodlaması için Jaccard örtüşmesi hesaplanır.</p>
-  <div class="card kn">
-    <div class="row">
-      <div>
-        <label for="goldIn">Altın Standart dosyası (CSV veya XLSX)</label>
-        <input type="file" id="goldIn" accept=".csv,.xlsx">
-        <p class="hint">Zorunlu sütunlar: baslik (veya title) ve yil (veya year). İsteğe bağlı: doi, anahtar_kelimeler (veya keywords), tema (veya theme).</p>
-      </div>
-      <div>
-        <label for="valTh">Bulanık başlık eşleşme eşiği (0,50 ile 1 arası)</label>
-        <input type="number" id="valTh" value="0.90" step="0.01" min="0.5" max="1">
-        <p class="hint">Eşleştirme önce DOI ile, ardından ±1 yıl toleransla başlık benzerliğine göre yapılır.</p>
-      </div>
-    </div>
-    <button class="btn" id="valGo">Karşılaştır</button>
-    <div class="status" id="valStat" hidden></div>
-  </div>
-  <div id="valBody" style="display:none">
-    <div class="stats" id="valCards"></div>
-    <div class="grid2" style="align-items:start">
-      <div class="chartbox" style="overflow-x:auto"><h4>Altın Standartta olup korpusta bulunamayanlar (ilk 20, recall kaybı)</h4><table id="missTable"></table></div>
-      <div class="chartbox" style="overflow-x:auto"><h4>Korpusta olup Altın Standartta bulunmayanlar (ilk 20, precision kaybı)</h4><table id="extraTable"></table></div>
-    </div>
-    <button class="btn" id="valReport" style="margin-top:0">Doğrulama raporunu indir (CSV)</button>
-  </div>
-</section>
-
-<!-- ============ DIŞA AKTAR ============ -->
-<section class="panel" id="p-disa">
-  <h2>Dışa Aktar</h2>
-  <p class="sub">Normalleştirilmiş korpusu indirin. CSV çıktısı Excel, SPSS ve R ile; JSON çıktısı Python ile doğrudan kullanılabilir.</p>
-  <div class="card kn">
-    <p id="expInfo" style="font-weight:500">Dışa aktarılacak kayıt yok. Önce 1. sekmeden veri yükleyin.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" id="expCsv" disabled>CSV indir</button>
-      <button class="btn alt" id="expJson" disabled>JSON indir</button>
-    </div>
-    <p class="hint" style="margin-top:14px">CSV sütunları: baslik, yazarlar, yil, dergi, tur, anahtar_kelimeler, ozet, atif, kurumlar, ulkeler, doi, dil, tema, kaynak. Çoklu değerler noktalı virgülle ayrılır; dosya, Türkçe karakterlerin Excel'de doğru görünmesi için UTF-8 BOM ile kaydedilir. JSON çıktısı ayrıca OpenAlex kaynakça kimliklerini (refs) içerir.</p>
-  </div>
-</section>
-
+  <!-- ============ EKRAN 3: RAPOR ============ -->
+  <section class="screen" id="s3" aria-labelledby="s3h">
+    <div id="rapor"></div>
+  </section>
 </main>
-<footer><div class="wrap">BiblioLab TR · tamamı istemci tarafında çalışır · veri kaynakları: OpenAlex, TR Dizin, DergiPark, Scopus/WoS dışa aktarımları</div></footer>
 
+<dialog id="ayarDlg" aria-labelledby="ayarH">
+  <form method="dialog" class="dlg">
+    <h2 id="ayarH">Ayarlar</h2>
+    <p class="lead">Her ikisi de isteğe bağlıdır. Anahtarlar yalnızca bu tarayıcıda saklanır.</p>
+    <div class="field">
+      <label class="lb" for="kGem">Gemini API anahtarı</label>
+      <input type="password" id="kGem" autocomplete="off" placeholder="AIza...">
+      <p class="help" id="kGemHelp">Raporlardaki yapay zekâ yorumu için kullanılır. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio'dan ücretsiz alın</a>.</p>
+    </div>
+    <div class="field">
+      <label class="lb" for="kOA">OpenAlex API anahtarı</label>
+      <input type="password" id="kOA" autocomplete="off">
+      <p class="help">Çok sayıda analiz yapıyorsanız günlük ücretsiz kullanım sınırını on katına çıkarır. <a href="https://developers.openalex.org/api-reference/authentication" target="_blank" rel="noopener noreferrer">Ücretsiz anahtar edinin</a>.</p>
+    </div>
+    <div class="actions">
+      <button class="btn" value="kaydet" id="ayarKaydet">Kaydet</button>
+      <button class="btn ghost" value="iptal" formnovalidate>Vazgeç</button>
+    </div>
+  </form>
+</dialog>
+
+<footer><div class="wrap">
+  <span>BiblioLab TR · veriler: OpenAlex, TR Dizin, DergiPark, Scopus, Web of Science dışa aktarımları · analizler tarayıcınızda çalışır</span>
+</div></footer>
+
+<script src="motor.js"></script>
 <script>
 /* ================= durum ================= */
-let RECS = [];            // normalleştirilmiş kayıtlar
-let charts = {};          // Chart.js örnekleri
-let curNet = 'kw';
+const ST = { mod:null, kisiTur:'authors', filtre:null, onizleme:null, recs:[], meta:null, yorum:null };
+const BU_YIL = new Date().getFullYear();
+const INK='#1B2A41', TEAL='#2E6E5E', GRAY='#A9B2C3';
 
-const $ = id => document.getElementById(id);
-const norm = s => (s||'').toString().trim();
-const nkey = s => norm(s).toLocaleLowerCase('tr').replace(/\s+/g,' ');
-const ESC_MAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
-const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c=>ESC_MAP[c]);
-const tick = () => new Promise(r=>setTimeout(r,0)); // arayüzün donmaması için kısa nefes
-
-function setStatus(id, msg, cls){ const el=$(id); el.hidden=false; el.textContent=msg; el.className='status'+(cls?' '+cls:''); }
-function refreshCount(){
-  const n=RECS.length;
-  $('recCount').textContent=n; $('recCount2').textContent=n;
-  $('srcSummary').textContent = n
-    ? 'Kaynaklar: '+countMap(RECS.map(r=>r.src)).map(x=>`${x.label} ${x.n}`).join(' · ')
-    : 'Henüz veri yüklenmedi. Aşağıdan bir kaynak seçin.';
-  $('fuzzyBtn').disabled = n<2; $('clearBtn').disabled = !n; $('goAnaliz').hidden = !n;
+/* ================= adımlar ve gezinme ================= */
+function adim(n, odak=true){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id==='s'+n));
+  document.querySelectorAll('#steps li').forEach(li=>{ const k=+li.dataset.s; li.classList.toggle('on',k===n); li.classList.toggle('done',k<n); if(k===n) li.setAttribute('aria-current','step'); else li.removeAttribute('aria-current'); });
+  const h=['s1h','s2h','s3h'][n-1]; window.scrollTo({top:0});
+  if(odak && $(h)) $(h).focus({preventScroll:true});
 }
-
-function addRecords(list, statId, srcName){
-  const seen = new Set(RECS.map(r => r.doi ? 'd:'+r.doi.toLowerCase() : 't:'+nkey(r.title)));
-  let added=0, dup=0;
-  for(const r of list){
-    if(!norm(r.title)) continue;
-    const k = r.doi ? 'd:'+r.doi.toLowerCase() : 't:'+nkey(r.title);
-    if(seen.has(k)){ dup++; continue; }
-    seen.add(k); RECS.push(r); added++;
-  }
-  refreshCount();
-  setStatus(statId, `${srcName}: ${added} kayıt eklendi${dup?`, ${dup} yinelenen atlandı`:''}. Toplam: ${RECS.length}`, 'ok');
-  renderAll();
+function git(n){ const h=['#soru','#kapsam','#rapor'][n-1]; if(location.hash!==h) history.pushState(null,'',h); adim(n); }
+window.addEventListener('popstate', yonlendir);
+function yonlendir(){
+  const h=location.hash;
+  if(h==='#rapor' && ST.recs.length) adim(3);
+  else if(h==='#kapsam' && ST.mod) adim(2);
+  else adim(1);
 }
 
-/* ================= OpenAlex ================= */
-function invAbstract(inv){
-  if(!inv) return '';
-  const out=[]; for(const [w,pos] of Object.entries(inv)) for(const p of pos) out[p]=w;
-  return out.join(' ');
-}
-function mapOA(w){
-  return {
-    title: norm(w.display_name),
-    authors: (w.authorships||[]).map(a=>norm(a.author&&a.author.display_name)).filter(Boolean),
-    year: w.publication_year||null,
-    journal: norm(w.primary_location&&w.primary_location.source&&w.primary_location.source.display_name),
-    keywords: (w.keywords||[]).map(k=>norm(k.display_name||k.keyword)).filter(Boolean),
-    abstract: invAbstract(w.abstract_inverted_index),
-    cited: w.cited_by_count||0,
-    insts: [...new Set((w.authorships||[]).flatMap(a=>(a.institutions||[]).map(i=>norm(i.display_name))))].filter(Boolean),
-    countries: [...new Set((w.authorships||[]).flatMap(a=>a.countries||[]))],
-    doi: norm(w.doi).replace('https://doi.org/',''),
-    lang: norm(w.language),
-    type: norm(w.type),
-    refs: w.referenced_works||[],
-    src: 'OpenAlex'
-  };
-}
-/* yalnızca mapOA'nın kullandığı alanlar istenir; indirme boyutu belirgin biçimde küçülür */
-const OA_FIELDS = 'id,display_name,authorships,publication_year,primary_location,keywords,abstract_inverted_index,cited_by_count,doi,language,type,referenced_works';
-$('oaGo').addEventListener('click', async ()=>{
-  const issn = $('oaIssn').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const q = norm($('oaSearch').value);
-  if(!issn.length && !q){ setStatus('oaStat','ISSN veya arama terimi girin.','err'); return; }
-  const f = [];
-  if(issn.length) f.push('primary_location.source.issn:'+issn.join('|'));
-  if($('oaArt').checked) f.push('type:article');
-  f.push(`from_publication_date:${$('oaY1').value}-01-01`,`to_publication_date:${$('oaY2').value}-12-31`);
-  const max = Math.min(+$('oaMax').value||1000, 5000);
-  const mail = norm($('oaMail').value);
-  let cursor='*', got=[], page=0;
-  $('oaGo').disabled=true;
-  try{
-    while(got.length<max && cursor){
-      page++;
-      setStatus('oaStat',`Sayfa ${page} çekiliyor… (${got.length} kayıt)`);
-      const u = new URL('https://api.openalex.org/works');
-      u.searchParams.set('filter', f.join(','));
-      if(q) u.searchParams.set('search', q);
-      u.searchParams.set('per-page','200');
-      u.searchParams.set('select',OA_FIELDS);
-      u.searchParams.set('cursor',cursor);
-      if(mail) u.searchParams.set('mailto',mail);
-      let res = await fetch(u);
-      if(res.status===400){ u.searchParams.delete('select'); res = await fetch(u); } // alan seçimi reddedilirse tam kayda dön
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const j = await res.json();
-      got.push(...(j.results||[]).map(mapOA));
-      cursor = j.meta && j.meta.next_cursor;
-      if(!(j.results||[]).length) break;
-    }
-    addRecords(got.slice(0,max),'oaStat','OpenAlex');
-  }catch(e){ setStatus('oaStat','Hata: '+e.message,'err'); }
-  $('oaGo').disabled=false;
-});
-
-/* ================= BibTeX ================= */
-function parseBib(text){
-  const recs=[]; const re=/@\w+\s*\{/g; let m, idx=[];
-  while((m=re.exec(text))) idx.push(m.index);
-  idx.push(text.length);
-  for(let i=0;i<idx.length-1;i++){
-    const chunk=text.slice(idx[i],idx[i+1]);
-    const get=f=>{ const r=new RegExp(f+'\\s*=\\s*[{"]([\\s\\S]*?)[}"]\\s*,?\\s*\\n','i'); const mm=chunk.match(r); return mm?mm[1].replace(/[{}]/g,'').replace(/\s+/g,' ').trim():''; };
-    const title=get('title'); if(!title) continue;
-    recs.push({
-      title, authors:get('author').split(/\s+and\s+/i).map(a=>norm(a.includes(',')?a.split(',').reverse().join(' '):a)).filter(Boolean),
-      year:+get('year')||null, journal:get('journal')||get('booktitle'),
-      keywords:(get('keywords')||get('keywords-plus')).split(/[;,]/).map(norm).filter(Boolean),
-      abstract:get('abstract'), cited:+(get('note').match(/Cited By.*?(\d+)/i)||[])[1]||0,
-      insts:[], countries:[], doi:get('doi'), lang:get('language'), src:'BibTeX'
-    });
-  }
-  return recs;
-}
-
-/* ================= Scopus CSV ================= */
-function parseScopusCSV(rows){
-  return rows.map(r=>({
-    title:norm(r['Title']||r['title']),
-    authors:norm(r['Authors']||r['Author full names']||'').split(/[;,]\s*(?=[A-ZÇĞİÖŞÜ])/).map(norm).filter(Boolean),
-    year:+r['Year']||null, journal:norm(r['Source title']),
-    keywords:norm(r['Author Keywords']||'').split(';').map(norm).filter(Boolean),
-    abstract:norm(r['Abstract']), cited:+r['Cited by']||0,
-    insts:norm(r['Affiliations']||'').split(';').map(norm).filter(Boolean).slice(0,10),
-    countries:[], doi:norm(r['DOI']), lang:norm(r['Language of Original Document']), type:norm(r['Document Type']).toLowerCase(), src:'Scopus CSV'
-  })).filter(r=>r.title);
-}
-
-/* ================= Manuel/bursiyer Excel-CSV tablosu ================= */
-function mapManualRow(r){
-  const g=k=>norm(firstOf(r,k));
-  return {
-    title:g(['baslik','title','yayin_adi','Başlık','Title','Yayın Adı']),
-    authors:g(['yazarlar','authors','yazar','Yazarlar']).split(/[;,]/).map(norm).filter(Boolean),
-    year:+g(['yil','year','Yıl','Year'])||null,
-    journal:g(['dergi','journal','dergi_adi','Dergi']),
-    keywords:g(['anahtar_kelimeler','keywords','anahtar_sozcukler','Anahtar Kelimeler']).split(/[;,]/).map(norm).filter(Boolean),
-    abstract:g(['ozet','abstract','oz','Özet']),
-    cited:+g(['atif','cited','atif_sayisi'])||0,
-    insts:g(['kurum','kurumlar','institution','Kurum']).split(';').map(norm).filter(Boolean),
-    countries:['TR'], doi:g(['doi','DOI']), lang:g(['dil','language'])||'tr',
-    type:g(['tur','yayin_turu','type','Tür']).toLowerCase()||'article',
-    theme:g(['tema','theme','Tema'])||undefined, src:'Manuel tablo'
-  };
-}
-function looksManual(hdr){ const h=hdr.map(x=>nkey(x)); return ['baslik','yayin_adi','yazarlar','dergi','yil'].some(k=>h.includes(k)); }
-
-/* ================= TR Dizin JSON (esnek eşleyici) ================= */
-function firstOf(o, keys){ for(const k of keys){ if(o&&o[k]!=null&&o[k]!=='') return o[k]; } return null; }
-function mapTR(o){
-  const s = o._source || o.source || o;
-  const authorsRaw = firstOf(s,['authors','author','yazarlar']) || [];
-  const authors = Array.isArray(authorsRaw)
-    ? authorsRaw.map(a=>typeof a==='string'?a:norm(firstOf(a,['name','fullName','adSoyad','firstName'])+((a.lastName)?' '+a.lastName:''))).filter(Boolean)
-    : norm(authorsRaw).split(/[;,]/).map(norm).filter(Boolean);
-  const kwRaw = firstOf(s,['keywords','keyword','anahtarKelimeler','subjects']) || [];
-  const keywords = Array.isArray(kwRaw)?kwRaw.map(k=>typeof k==='string'?norm(k):norm(k.name||k.keyword)).filter(Boolean)
-    : norm(kwRaw).split(/[;,]/).map(norm).filter(Boolean);
-  return {
-    title: norm(firstOf(s,['title','titleTr','baslik','name'])),
-    authors, year:+firstOf(s,['publicationYear','year','yil'])||null,
-    journal: norm(firstOf(s,['journalName','journal','dergiAdi','source'])),
-    keywords, abstract: norm(firstOf(s,['abstract','abstractTr','oz','ozet'])),
-    cited:+firstOf(s,['citationCount','citedBy','atifSayisi'])||0,
-    insts:[], countries:['TR'], doi:norm(firstOf(s,['doi'])), lang:norm(firstOf(s,['language','dil']))||'tr',
-    type:norm(firstOf(s,['publicationType','yayinTuru','documentType','tur'])).toLowerCase()||'article', src:'TR Dizin'
-  };
-}
-function extractTRList(j){
-  if(Array.isArray(j)) return j;
-  if(j.hits&&Array.isArray(j.hits.hits)) return j.hits.hits;
-  if(j.data){ if(Array.isArray(j.data)) return j.data; if(j.data.hits&&Array.isArray(j.data.hits.hits)) return j.data.hits.hits; }
-  if(Array.isArray(j.results)) return j.results;
-  return [];
-}
-$('trGo').addEventListener('click',()=>{
-  try{
-    const j=JSON.parse($('trJson').value);
-    const list=extractTRList(j).map(mapTR).filter(r=>r.title);
-    if(!list.length){ setStatus('trStat','Tanınan kayıt bulunamadı; JSON yapısını kontrol edin.','err'); return; }
-    addRecords(list,'trStat','TR Dizin');
-  }catch(e){ setStatus('trStat','JSON ayrıştırılamadı: '+e.message,'err'); }
-});
-
-/* ================= Dosya yükleme ================= */
-$('fileIn').addEventListener('change', async ev=>{
-  for(const file of ev.target.files){
-    const ext = file.name.split('.').pop().toLowerCase();
-    try{
-      if(ext==='xlsx'){
-        const wb=XLSX.read(await file.arrayBuffer());
-        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-        if(!rows.length){ setStatus('fileStat',file.name+': boş sayfa.','err'); continue; }
-        const hdr=Object.keys(rows[0]);
-        const recs = looksManual(hdr) ? rows.map(mapManualRow) : parseScopusCSV(rows);
-        addRecords(recs.filter(r=>r.title),'fileStat',file.name);
-        continue;
-      }
-      const text = await file.text();
-      if(ext==='bib'){ addRecords(parseBib(text),'fileStat',file.name); }
-      else if(ext==='csv'){
-        const p = Papa.parse(text,{header:true,skipEmptyLines:true});
-        const hdr = p.meta.fields||[];
-        if(looksManual(hdr)){ addRecords(p.data.map(mapManualRow).filter(r=>r.title),'fileStat',file.name); }
-        else if(hdr.includes('display_name')||hdr.includes('id')&&hdr.includes('publication_year')){
-          addRecords(p.data.map(r=>({title:norm(r.display_name||r.title),authors:norm(r['authorships.author.display_name']||r.authors||'').split('|').map(norm).filter(Boolean),year:+(r.publication_year)||null,journal:norm(r['primary_location.source.display_name']||''),keywords:norm(r['keywords.display_name']||'').split('|').map(norm).filter(Boolean),abstract:'',cited:+r.cited_by_count||0,insts:[],countries:[],doi:norm(r.doi).replace('https://doi.org/',''),lang:norm(r.language),src:'OpenAlex CSV'})).filter(r=>r.title),'fileStat',file.name);
-        } else addRecords(parseScopusCSV(p.data),'fileStat',file.name);
-      }
-      else if(ext==='json'){
-        const j=JSON.parse(text);
-        if(j.results&&j.results[0]&&j.results[0].authorships!==undefined) addRecords(j.results.map(mapOA),'fileStat',file.name);
-        else if(Array.isArray(j)&&j[0]&&j[0].authorships!==undefined) addRecords(j.map(mapOA),'fileStat',file.name);
-        else addRecords(extractTRList(j).map(mapTR).filter(r=>r.title),'fileStat',file.name);
-      }
-      else setStatus('fileStat','Desteklenmeyen uzantı: '+ext,'err');
-    }catch(e){ setStatus('fileStat',file.name+' okunamadı: '+e.message,'err'); }
-  }
-  ev.target.value='';
-});
-
-/* ================= OAI-PMH ================= */
-$('oaiGo').addEventListener('click', async ()=>{
-  const base = norm($('oaiUrl').value); if(!base){ setStatus('oaiStat','OAI uç noktası girin.','err'); return; }
-  const proxy = norm($('oaiProxy').value);
-  const mk = u => proxy ? proxy + encodeURIComponent(u) : u;
-  let token=null, page=0, got=[];
-  $('oaiGo').disabled=true;
-  try{
-    do{
-      page++;
-      setStatus('oaiStat',`Sayfa ${page} hasat ediliyor… (${got.length} kayıt)`);
-      const u = base + (base.includes('?')?'&':'?') + (token
-        ? 'verb=ListRecords&resumptionToken='+encodeURIComponent(token)
-        : 'verb=ListRecords&metadataPrefix=oai_dc');
-      const res = await fetch(mk(u)); if(!res.ok) throw new Error('HTTP '+res.status+' (CORS engeli olabilir, proxy deneyin)');
-      const xml = new DOMParser().parseFromString(await res.text(),'text/xml');
-      const err = xml.querySelector('error'); if(err) throw new Error(err.textContent);
-      const g = tag => rec => [...rec.getElementsByTagNameNS('http://purl.org/dc/elements/1.1/',tag)].map(n=>norm(n.textContent));
-      for(const rec of xml.getElementsByTagName('record')){
-        const t=g('title')(rec)[0]; if(!t) continue;
-        const dateStr=g('date')(rec)[0]||''; const y=+(dateStr.match(/\d{4}/)||[])[0]||null;
-        got.push({title:t,authors:g('creator')(rec),year:y,journal:g('source')(rec)[0]||g('publisher')(rec)[0]||'',
-          keywords:g('subject')(rec),abstract:g('description')(rec)[0]||'',cited:0,insts:[],countries:['TR'],
-          doi:(g('identifier')(rec).find(i=>i.includes('doi.org'))||'').replace(/.*doi\.org\//,''),
-          lang:g('language')(rec)[0]||'',src:'DergiPark OAI'});
-      }
-      const rt = xml.querySelector('resumptionToken'); token = rt && norm(rt.textContent) ? rt.textContent.trim() : null;
-    } while(token && page<25);
-    addRecords(got,'oaiStat','DergiPark');
-  }catch(e){ setStatus('oaiStat','Hata: '+e.message,'err'); }
-  $('oaiGo').disabled=false;
-});
-
-$('clearBtn').addEventListener('click',()=>{
-  if(!RECS.length || !confirm(RECS.length+' kayıtlık korpus silinsin mi? Tarayıcıda saklanan kopya da silinir; bu işlem geri alınamaz.')) return;
-  RECS=[]; refreshCount(); renderAll(); $('fuzzyStat').hidden=true; $('restoreNote').hidden=true;
-});
-/* kart içi sekmeler (Veri kaynakları, LLM araçları): her kart kendi bölmelerini yönetir */
-document.querySelectorAll('.src-tabs [data-pane]').forEach(b=>b.addEventListener('click',()=>{
-  const card=b.closest('.src-card');
-  card.querySelectorAll('.src-tabs [data-pane]').forEach(x=>{ x.classList.remove('on'); x.setAttribute('aria-selected','false'); });
-  card.querySelectorAll('.src-pane').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); b.setAttribute('aria-selected','true'); $(b.dataset.pane).classList.add('on');
-}));
-$('goAnaliz').addEventListener('click',()=>{ document.querySelector('nav button[data-t=analiz]').click(); window.scrollTo({top:0,behavior:'smooth'}); });
-/* yapışkan korpus şeridi, sekme çubuğunun hemen altında dursun */
-function setNavH(){ document.documentElement.style.setProperty('--navh', document.querySelector('nav').offsetHeight+'px'); }
-setNavH(); window.addEventListener('resize', setNavH);
-
-/* ================= health check ================= */
-function renderHealth(){
-  const has=RECS.length>0; $('healthCard').style.display=has?'block':'none'; if(!has) return;
-  const fields=[['title','Başlık',r=>!!norm(r.title)],['authors','Yazarlar',r=>r.authors.length>0],
-    ['year','Yıl',r=>!!r.year],['journal','Dergi',r=>!!norm(r.journal)],
-    ['keywords','Anahtar kelimeler',r=>r.keywords.length>0],['abstract','Özet',r=>!!norm(r.abstract)],
-    ['doi','DOI',r=>!!norm(r.doi)],['cited','Atıf bilgisi',r=>r.cited>0]];
-  const badChar=RECS.filter(r=>/[�]|Ã[§¶¼]|Ä±/.test(r.title+' '+r.abstract)).length;
-  $('healthTable').innerHTML='<tr><th>Alan</th><th>Dolu</th><th>Oran</th><th>Durum</th></tr>'+
-    fields.map(([k,lab,f])=>{const n=RECS.filter(f).length;const p=Math.round(100*n/RECS.length);
-      return `<tr><td>${lab}</td><td class="num">${n}/${RECS.length}</td><td class="num">%${p}</td><td>${p>=70?'✓':'⚠ düşük doluluk'}</td></tr>`;}).join('')+
-    `<tr><td>Karakter kodlama sorunu</td><td class="num">${badChar}</td><td class="num">%${Math.round(100*badChar/RECS.length)}</td><td>${badChar?'⚠ bozuk karakter şüphesi':'✓'}</td></tr>`;
-}
-
-/* ================= bulanık yinelenen (fuzzy dedup) ================= */
-/* sınırlı Levenshtein: mesafe k'yı aşınca erken çıkar (k+1 döndürür) */
-function levK(a,b,k){
-  const m=a.length,n=b.length;
-  if(Math.abs(m-n)>k) return k+1;
-  if(!m) return n; if(!n) return m;
-  let prev=new Uint16Array(n+1), cur=new Uint16Array(n+1);
-  for(let j=0;j<=n;j++) prev[j]=j;
-  for(let i=1;i<=m;i++){
-    cur[0]=i; let rowMin=i; const ca=a.charCodeAt(i-1);
-    for(let j=1;j<=n;j++){
-      const v=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(ca===b.charCodeAt(j-1)?0:1));
-      cur[j]=v; if(v<rowMin) rowMin=v;
-    }
-    if(rowMin>k) return k+1;
-    const t=prev; prev=cur; cur=t;
-  }
-  return prev[n];
-}
-function sim(a,b){ const L=Math.max(a.length,b.length); return L? 1-levK(a,b,L)/L : 1; }
-/* a ile b, th eşiğinde benzer mi? (ölçüt sim(a,b)>=th ile aynıdır, yalnızca daha hızlı) */
-function similarAt(a,b,th){
-  const L=Math.max(a.length,b.length); if(!L) return 1;
-  const k=Math.floor((1-th)*L+1e-9);
-  const d=levK(a,b,k); return d>k ? 0 : 1-d/L;
-}
-$('fuzzyBtn').addEventListener('click', async ()=>{
-  if(RECS.length<2) return;
-  const th=0.92; const removed=[];
-  $('fuzzyBtn').disabled=true;
-  // anahtarlar bir kez hesaplanır; yıl bazlı kovalarla karşılaştırma sayısı sınırlanır
-  const key=new Map(RECS.map(r=>[r,nkey(r.title)]));
-  const byYear={};
-  for(const r of RECS){ const y=r.year||0; (byYear[y]=byYear[y]||[]).push(r); }
-  const dead=new Set();
-  let ops=0;
-  try{
-    for(const y of Object.keys(byYear)){
-      const own=byYear[y], bucket=[...own,...(byYear[+y+1]||[])];
-      for(const a of own){ if(dead.has(a)) continue;
-        const ka=key.get(a);
-        for(const b of bucket){ if(a===b||dead.has(b)) continue;
-          if(similarAt(ka,key.get(b),th)>=th){ dead.add(b); removed.push([a.title,b.title,b.src]); }
-          if(++ops%4000===0){ setStatus('fuzzyStat',`Bulanık tarama sürüyor… (${removed.length} olası mükerrer)`); $('healthCard').style.display='block'; await tick(); }
-        }
-      }
-    }
-  } finally { $('fuzzyBtn').disabled=false; }
-  RECS=RECS.filter(r=>!dead.has(r));
-  refreshCount(); renderAll();
-  setStatus('fuzzyStat', removed.length
-    ? `Bulanık tarama (eşik ${th}): ${removed.length} olası mükerrer kaldırıldı.\n`+removed.slice(0,10).map(([a,b,s])=>`· "${b.slice(0,60)}" (${s}) ≈ "${a.slice(0,60)}"`).join('\n')+(removed.length>10?`\n… ve ${removed.length-10} kayıt daha`:'')
-    : 'Bulanık tarama tamamlandı: mükerrer bulunamadı.','ok');
-});
-
-/* ================= analiz ================= */
-function countMap(items){ const m=new Map(); for(const it of items){ const k=nkey(it); if(!k) continue; if(!m.has(k)) m.set(k,{label:it,n:0}); m.get(k).n++; } return [...m.values()].sort((a,b)=>b.n-a.n); }
-function mkChart(id, cfg){ if(charts[id]) charts[id].destroy(); charts[id]=new Chart($(id),cfg); }
-const INK='#1B2A41', HL='#FFD34D', TEAL='#2E6E5E', BRICK='#A44A3F';
-
-function renderAnaliz(){
-  anDirty = false;
-  const has = RECS.length>0;
-  $('anEmpty').style.display = has?'none':'block';
-  $('anBody').style.display = has?'block':'none';
-  if(!has) return;
-  const years = RECS.map(r=>r.year).filter(Boolean);
-  const authors = countMap(RECS.flatMap(r=>r.authors));
-  const journals = countMap(RECS.map(r=>r.journal).filter(Boolean));
-  const kws = countMap(RECS.flatMap(r=>r.keywords));
-  const langs = countMap(RECS.map(r=>r.lang).filter(Boolean));
-  const totCit = RECS.reduce((s,r)=>s+r.cited,0);
-  const collab = (RECS.reduce((s,r)=>s+r.authors.length,0)/RECS.length).toFixed(2);
-  const stats = [
-    [RECS.length,'yayın'],[authors.length,'yazar'],[journals.length,'dergi'],
-    [years.length?Math.min(...years)+'–'+Math.max(...years):'?','yıl aralığı'],
-    [totCit,'toplam atıf'],[(totCit/RECS.length).toFixed(1),'ort. atıf/yayın'],[collab,'ort. yazar/yayın'],[kws.length,'anahtar kelime']
-  ];
-  $('statCards').innerHTML = stats.map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
-
-  const yMap={}; const cMap={};
-  for(const r of RECS){ if(!r.year) continue; yMap[r.year]=(yMap[r.year]||0)+1; cMap[r.year]=(cMap[r.year]||0)+r.cited; }
-  const ys=Object.keys(yMap).sort();
-  mkChart('chYear',{type:'bar',data:{labels:ys,datasets:[{data:ys.map(y=>yMap[y]),backgroundColor:INK}]},options:{scales:{y:{beginAtZero:true}},plugins:{legend:{display:false}}}});
-  mkChart('chCit',{type:'line',data:{labels:ys,datasets:[{data:ys.map(y=>cMap[y]),borderColor:TEAL,backgroundColor:'rgba(46,110,94,.12)',fill:true,tension:.3}]},options:{scales:{y:{beginAtZero:true,suggestedMax:1}},plugins:{legend:{display:false}}}});
-  const hbar=(id,arr,color)=>mkChart(id,{type:'bar',data:{labels:arr.map(a=>a.label.length>32?a.label.slice(0,30)+'…':a.label),datasets:[{data:arr.map(a=>a.n),backgroundColor:color}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
-  hbar('chAuth',authors.slice(0,10),INK);
-  hbar('chJour',journals.slice(0,10),TEAL);
-  hbar('chKw',kws.slice(0,12),BRICK);
-  mkChart('chLang',{type:'doughnut',data:{labels:langs.slice(0,6).map(l=>l.label),datasets:[{data:langs.slice(0,6).map(l=>l.n),backgroundColor:[INK,HL,TEAL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{aspectRatio:2,plugins:{legend:{position:'right'}}}});
-  const insts=countMap(RECS.flatMap(r=>r.insts));
-  hbar('chInst',insts.slice(0,10),'#33415C');
-  const ctry=countMap(RECS.flatMap(r=>r.countries));
-  mkChart('chCountry',{type:'bar',data:{labels:ctry.slice(0,12).map(c=>c.label),datasets:[{data:ctry.slice(0,12).map(c=>c.n),backgroundColor:TEAL}]},options:{aspectRatio:3,plugins:{legend:{display:false}}}});
-  const types=countMap(RECS.map(r=>r.type||'belirsiz'));
-  mkChart('chType',{type:'doughnut',data:{labels:types.slice(0,6).map(t=>t.label),datasets:[{data:types.slice(0,6).map(t=>t.n),backgroundColor:[TEAL,INK,HL,BRICK,'#8FA0BE','#D7DDE7']}]},options:{aspectRatio:2,plugins:{legend:{position:'right'}}}});
-  const themes=countMap(RECS.map(r=>r.theme).filter(Boolean));
-  if(themes.length){ $('chTheme').style.display='block'; $('themeEmpty').hidden=true; hbar('chTheme',themes.slice(0,10),TEAL); }
-  else { if(charts.chTheme){ charts.chTheme.destroy(); delete charts.chTheme; } $('chTheme').style.display='none'; $('themeEmpty').hidden=false; }
-  drawCanvasViz(kws, journals);
-
-  const top = [...RECS].sort((a,b)=>b.cited-a.cited).slice(0,15);
-  $('topTable').innerHTML = '<tr><th>#</th><th>Başlık</th><th>Yıl</th><th>Dergi</th><th>Atıf</th><th>Kaynak</th></tr>'+
-    top.map((r,i)=>`<tr><td class="num">${i+1}</td><td>${esc(r.title)}</td><td class="num">${esc(r.year||'')}</td><td>${esc(r.journal)}</td><td class="num">${esc(r.cited)}</td><td>${esc(r.src)}</td></tr>`).join('');
-}
-/* kelime bulutu, TreeMap, Sankey: piksel genişliği gerektiğinden yalnızca grupları görünürken çizilir */
-function isGrp(g){ return $('grp-'+g).classList.contains('on'); }
-function drawCanvasViz(kws, journals){
-  if(isGrp('icerik')) drawWordCloud((kws || countMap(RECS.flatMap(r=>r.keywords))).slice(0,40));
-  if(isGrp('dergi')){
-    drawTreemap((journals || countMap(RECS.map(r=>r.journal).filter(Boolean))).slice(0,12), RECS.length);
-    drawSankey();
-  }
-}
-/* analiz grupları */
-document.querySelectorAll('[data-grp]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-grp]').forEach(x=>{ x.classList.remove('on'); x.setAttribute('aria-selected','false'); });
-  document.querySelectorAll('.an-grp').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); b.setAttribute('aria-selected','true'); $('grp-'+b.dataset.grp).classList.add('on');
-  if(RECS.length) drawCanvasViz();
-}));
-
-/* ================= EDA görselleri: WordCloud / TreeMap / Sankey ================= */
-function setupCanvas(id,h){ const cv=$(id); const W=cv.width=cv.clientWidth*2; const H=cv.height=h*2; const ctx=cv.getContext('2d'); ctx.clearRect(0,0,W,H); return {cv,ctx,W,H}; }
-function drawWordCloud(kws){
-  const {ctx,W,H}=setupCanvas('wcCanvas',380);
-  if(!kws.length){ ctx.fillStyle='#68738A'; ctx.font='26px IBM Plex Sans'; ctx.fillText('Anahtar kelime verisi yok.',30,60); return; }
-  const maxN=kws[0].n, minN=kws[kws.length-1].n;
-  const colors=[INK,TEAL,BRICK,'#33415C','#8A6D1C'];
-  const placed=[];
-  const collide=(x,y,w,h)=>x<6||y<6||x+w>W-6||y+h>H-6||placed.some(p=>x<p.x+p.w+8&&x+w+8>p.x&&y<p.y+p.h+6&&y+h+6>p.y);
-  kws.forEach((k,i)=>{
-    const fs=Math.round(20+44*((k.n-minN)/Math.max(1,maxN-minN)));
-    ctx.font=`600 ${fs}px IBM Plex Sans`;
-    const w=ctx.measureText(k.label).width, h=fs;
-    let ok=false,x=0,y=0;
-    for(let t=0;t<600&&!ok;t++){
-      const ang=t*0.35, rad=6*Math.sqrt(t);
-      x=W/2+rad*Math.cos(ang)*2.1-w/2; y=H/2+rad*Math.sin(ang)-h/2;
-      if(!collide(x,y,w,h)) ok=true;
-    }
-    if(!ok) return;
-    placed.push({x,y,w,h});
-    ctx.fillStyle=colors[i%colors.length];
-    ctx.fillText(k.label,x,y+h*0.82);
-  });
-}
-function drawTreemap(journals,total){
-  const {ctx,W,H}=setupCanvas('tmCanvas',340);
-  if(!journals.length){ ctx.fillStyle='#68738A'; ctx.font='26px IBM Plex Sans'; ctx.fillText('Dergi verisi yok.',30,60); return; }
-  const other=total-journals.reduce((s,j)=>s+j.n,0);
-  const items=[...journals]; if(other>0) items.push({label:'Diğer',n:other});
-  const cols=[INK,'#33415C',TEAL,'#3E7D6C',BRICK,'#B86A5F','#8FA0BE','#5C6B8A','#8A6D1C','#C9A227','#68738A','#A9B2C3','#D7DDE7'];
-  // dilimleme (slice-dice) yerleşimi
-  let x=0,y=0,w=W,h=H,horiz=true,rem=items.reduce((s,i)=>s+i.n,0);
-  items.forEach((it,i)=>{
-    const frac=it.n/rem;
-    let rw,rh;
-    if(horiz){ rw=w*frac; rh=h; } else { rw=w; rh=h*frac; }
-    ctx.fillStyle=cols[i%cols.length]; ctx.fillRect(x+2,y+2,Math.max(rw-4,2),Math.max(rh-4,2));
-    if(rw>90&&rh>44){
-      ctx.fillStyle='#fff'; ctx.font='600 20px IBM Plex Sans';
-      const lb=it.label.length>22?it.label.slice(0,20)+'…':it.label;
-      ctx.fillText(lb,x+12,y+30); ctx.font='400 18px IBM Plex Mono'; ctx.fillText(it.n+' yayın',x+12,y+56);
-    }
-    if(horiz){ x+=rw; w-=rw; } else { y+=rh; h-=rh; }
-    rem-=it.n; horiz=!horiz;
-  });
-}
-function drawSankey(){
-  const {ctx,W,H}=setupCanvas('skCanvas',340);
-  const srcs=countMap(RECS.map(r=>r.src));
-  const jTop=countMap(RECS.map(r=>r.journal).filter(Boolean)).slice(0,7).map(j=>nkey(j.label));
-  const flows=new Map(); // 'src||journal' -> n
-  for(const r of RECS){
-    const j=jTop.includes(nkey(r.journal))?r.journal:'Diğer dergiler';
-    const k=r.src+'||'+j; flows.set(k,(flows.get(k)||0)+1);
-  }
-  const right=countMap(RECS.map(r=>jTop.includes(nkey(r.journal))?r.journal:'Diğer dergiler'));
-  const tot=RECS.length; if(!tot) return;
-  const colL=60, colR=W-380, bw=26, gap=14;
-  const lay=(arr,x)=>{ let y=10; const m=new Map();
-    for(const a of arr){ const h=Math.max(10,(H-20-gap*(arr.length-1))*a.n/tot); m.set(nkey(a.label),{y,h,label:a.label,n:a.n,x}); y+=h+gap; } return m; };
-  const L=lay(srcs,colL), R=lay(right,colR);
-  const used={l:new Map(),r:new Map()};
-  const cols=[INK,TEAL,BRICK,'#8A6D1C','#5C6B8A'];
-  let ci=0;
-  for(const [k,n] of [...flows.entries()].sort((a,b)=>b[1]-a[1])){
-    const [s,j]=k.split('||'); const l=L.get(nkey(s)), r=R.get(nkey(j)); if(!l||!r) continue;
-    const fh=Math.max(3,(H-20-gap*(srcs.length-1))*n/tot);
-    const ly=l.y+(used.l.get(nkey(s))||0), ry=r.y+(used.r.get(nkey(j))||0);
-    used.l.set(nkey(s),(used.l.get(nkey(s))||0)+fh); used.r.set(nkey(j),(used.r.get(nkey(j))||0)+fh);
-    const c=cols[ci++%cols.length];
-    ctx.globalAlpha=.35; ctx.fillStyle=c;
-    ctx.beginPath();
-    ctx.moveTo(colL+bw,ly);
-    ctx.bezierCurveTo((colL+colR)/2,ly,(colL+colR)/2,ry,colR,ry);
-    ctx.lineTo(colR,ry+fh);
-    ctx.bezierCurveTo((colL+colR)/2,ry+fh,(colL+colR)/2,ly+fh,colL+bw,ly+fh);
-    ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
-  }
-  ctx.font='600 19px IBM Plex Sans';
-  for(const v of L.values()){ ctx.fillStyle=INK; ctx.fillRect(colL,v.y,bw,v.h); ctx.fillStyle='#1B2A41';
-    ctx.save(); ctx.translate(colL-10,v.y+v.h/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.fillText(v.label.slice(0,18),0,0); ctx.restore(); }
-  for(const v of R.values()){ ctx.fillStyle=TEAL; ctx.fillRect(colR,v.y,bw,v.h); ctx.fillStyle='#1B2A41'; ctx.textAlign='left';
-    ctx.fillText((v.label.length>28?v.label.slice(0,26)+'…':v.label)+' ('+v.n+')',colR+bw+10,v.y+Math.min(v.h/2+7,v.h+2)); }
-  ctx.textAlign='left';
-}
-
-/* ================= ağlar ================= */
-function buildNet(field){
-  const items = r => field==='kw'? r.keywords : r.authors;
-  const freq = countMap(RECS.flatMap(items));
-  const topSet = new Map(freq.slice(0,30).map(f=>[nkey(f.label),f]));
-  const edges = new Map();
-  for(const r of RECS){
-    const ks=[...new Set(items(r).map(nkey))].filter(k=>topSet.has(k)).sort();
-    for(let i=0;i<ks.length;i++) for(let j=i+1;j<ks.length;j++){
-      const k=ks[i]+'||'+ks[j]; edges.set(k,(edges.get(k)||0)+1);
-    }
-  }
-  const E=[...edges.entries()].filter(([,w])=>w>=2).map(([k,w])=>{const [a,b]=k.split('||');return{a,b,w};});
-  const usedNodes=new Set(E.flatMap(e=>[e.a,e.b]));
-  const N=[...topSet.entries()].filter(([k])=>usedNodes.has(k)).map(([k,f])=>({id:k,label:f.label,n:f.n}));
-  return {N,E};
-}
-/* --- atıf ağları (yalnızca kaynakça verisi olan OpenAlex kayıtları) --- */
-function refDocs(){ return RECS.filter(r=>r.refs&&r.refs.length); }
-function shortDoc(r){ return (r.title.length>34?r.title.slice(0,32)+'…':r.title)+' ('+(r.year||'?')+')'; }
-function buildBC(){ // bibliyografik eşleşme: ortak kaynakça paylaşan yayınlar
-  const docs=refDocs().sort((a,b)=>b.refs.length-a.refs.length).slice(0,30);
-  const sets=docs.map(d=>new Set(d.refs));
-  const E=[];
-  for(let i=0;i<docs.length;i++) for(let j=i+1;j<docs.length;j++){
-    let w=0; for(const x of sets[i]) if(sets[j].has(x)) w++;
-    if(w>=1) E.push({a:'d'+i,b:'d'+j,w});
-  }
-  const E2=E.filter(e=>e.w>=2).length>=3?E.filter(e=>e.w>=2):E;
-  const used=new Set(E2.flatMap(e=>[e.a,e.b]));
-  const N=docs.map((d,i)=>({id:'d'+i,label:shortDoc(d),n:d.refs.length})).filter(n=>used.has(n.id));
-  return {N,E:E2};
-}
-const REFLABELS=new Map(); // OpenAlex ID -> başlık
-async function resolveRefLabels(ids){
-  const need=ids.filter(id=>!REFLABELS.has(id));
-  for(let s=0;s<need.length;s+=50){
-    const batch=need.slice(s,s+50).map(id=>id.replace('https://openalex.org/',''));
-    try{
-      const res=await fetch('https://api.openalex.org/works?filter=openalex_id:'+batch.join('|')+'&per-page=50&select=id,display_name,publication_year');
-      const j=await res.json();
-      for(const w of (j.results||[])) REFLABELS.set(w.id,(w.display_name||'').slice(0,34)+' ('+(w.publication_year||'?')+')');
-    }catch(e){}
-    for(const id of need) if(!REFLABELS.has('https://openalex.org/'+id)&&!REFLABELS.has(id)) REFLABELS.set(id,id.split('/').pop());
-  }
-}
-async function buildCC(){ // ortak atıf: aynı kaynakçalarda birlikte anılan referanslar
-  const docs=refDocs();
-  const freq=new Map();
-  for(const d of docs) for(const x of new Set(d.refs)) freq.set(x,(freq.get(x)||0)+1);
-  const top=[...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,30);
-  const topSet=new Set(top.map(t=>t[0]));
-  const edges=new Map();
-  for(const d of docs){
-    const ks=[...new Set(d.refs)].filter(x=>topSet.has(x)).sort();
-    for(let i=0;i<ks.length;i++) for(let j=i+1;j<ks.length;j++){
-      const k=ks[i]+'||'+ks[j]; edges.set(k,(edges.get(k)||0)+1);
-    }
-  }
-  const E=[...edges.entries()].filter(([,w])=>w>=2).map(([k,w])=>{const [a,b]=k.split('||');return{a,b,w};});
-  const used=new Set(E.flatMap(e=>[e.a,e.b]));
-  const ids=top.map(t=>t[0]).filter(id=>used.has(id));
-  await resolveRefLabels(ids);
-  const N=top.filter(([id])=>used.has(id)).map(([id,n])=>({id,label:REFLABELS.get(id)||id.split('/').pop(),n}));
-  return {N,E};
-}
-
-async function drawNet(){
-  const cv=$('netCanvas'); const ctx=cv.getContext('2d');
-  const W=cv.width=cv.clientWidth*2; const H=cv.height=560*2; ctx.scale(1,1);
-  ctx.clearRect(0,0,W,H);
-  let net;
-  if(curNet==='bc'||curNet==='cc'){
-    if(!refDocs().length){
-      ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans';
-      ctx.fillText('Atıf ağları için kaynakça verisi gerekir: OpenAlex sekmesinden veri çekin.',40,80);
-      $('edgeTable').innerHTML=''; return;
-    }
-    if(curNet==='cc'){ ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans'; ctx.fillText('Referans başlıkları OpenAlex üzerinden çözümleniyor…',40,80); }
-    net = curNet==='bc'?buildBC():await buildCC();
-    ctx.clearRect(0,0,W,H);
-  } else net = buildNet(curNet);
-  const {N,E}=net;
-  if(!N.length){ ctx.fillStyle='#68738A'; ctx.font='28px IBM Plex Sans'; ctx.fillText('Ağ kurmak için yeterli ortak görünüm yok.',40,80); $('edgeTable').innerHTML=''; return; }
-  const pos=new Map(N.map((n,i)=>[n.id,{x:W/2+Math.cos(i/N.length*6.283)*W/3.2,y:H/2+Math.sin(i/N.length*6.283)*H/3.2,vx:0,vy:0}]));
-  for(let it=0; it<260; it++){
-    for(const a of N) for(const b of N){ if(a===b) continue;
-      const pa=pos.get(a.id),pb=pos.get(b.id); let dx=pa.x-pb.x,dy=pa.y-pb.y; const d=Math.max(30,Math.hypot(dx,dy));
-      const f=42000/(d*d); pa.vx+=dx/d*f; pa.vy+=dy/d*f; }
-    for(const e of E){ const pa=pos.get(e.a),pb=pos.get(e.b); const dx=pb.x-pa.x,dy=pb.y-pa.y; const d=Math.hypot(dx,dy)||1;
-      const f=(d-170)*0.012*Math.min(e.w,6)/2; pa.vx+=dx/d*f; pa.vy+=dy/d*f; pb.vx-=dx/d*f; pb.vy-=dy/d*f; }
-    for(const n of N){ const p=pos.get(n.id);
-      p.vx+=(W/2-p.x)*0.004; p.vy+=(H/2-p.y)*0.004;
-      p.x+=Math.max(-14,Math.min(14,p.vx)); p.y+=Math.max(-14,Math.min(14,p.vy)); p.vx*=.5; p.vy*=.5;
-      p.x=Math.max(70,Math.min(W-70,p.x)); p.y=Math.max(50,Math.min(H-50,p.y)); }
-  }
-  const maxW=Math.max(...E.map(e=>e.w));
-  for(const e of E){ const pa=pos.get(e.a),pb=pos.get(e.b);
-    ctx.strokeStyle=`rgba(27,42,65,${0.12+0.5*e.w/maxW})`; ctx.lineWidth=1+5*e.w/maxW;
-    ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke(); }
-  const maxN=Math.max(...N.map(n=>n.n));
-  for(const n of N){ const p=pos.get(n.id); const r=10+26*n.n/maxN;
-    ctx.fillStyle={kw:'#A44A3F',auth:'#2E6E5E',bc:'#1B2A41',cc:'#8A6D1C'}[curNet]||'#2E6E5E'; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
-    ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
-    ctx.fillStyle='#1B2A41'; ctx.font='600 22px IBM Plex Sans';
-    const lb=n.label.length>26?n.label.slice(0,24)+'…':n.label;
-    ctx.fillText(lb, p.x+r+6, p.y+7); }
-  $('edgeTable').innerHTML='<tr><th>Düğüm A</th><th>Düğüm B</th><th>Birlikte görünüm</th></tr>'+
-    [...E].sort((a,b)=>b.w-a.w).slice(0,15).map(e=>{
-      const la=N.find(n=>n.id===e.a).label, lbb=N.find(n=>n.id===e.b).label;
-      return `<tr><td>${esc(la)}</td><td>${esc(lbb)}</td><td class="num">${e.w}</td></tr>`;}).join('');
-}
-document.querySelectorAll('[data-net]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-net]').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  curNet=b.dataset.net; drawNet();
-}));
-function renderAg(){ agDirty=false; const has=RECS.length>0; $('agEmpty').style.display=has?'none':'block'; $('agBody').style.display=has?'block':'none'; if(has) drawNet(); }
-
-/* ================= LLM ================= */
-const PROMPTS={
-  yorum:'Aşağıdaki bibliyometrik analiz özetini bir akademik makalenin bulgular ve tartışma bölümüne uygun, ölçülü ve kanıta dayalı bir dille Türkçe yorumla. Aşırı genelleme yapma; verinin kapsam sınırlarını belirt.',
-  yontem:'Aşağıdaki korpus bilgilerine dayanarak, bir makalenin yöntem bölümü için veri kaynağını, kapsamı, tarama ölçütlerini ve analiz birimlerini tanımlayan 2 paragraflık akademik Türkçe taslak yaz. Kaynakça verisi bulunmadığında atıf-ağı analizlerinin yapılamadığını sınırlılık olarak ekle.',
-  tema:'Aşağıdaki anahtar kelime dağılımı ve örnek özetlerden hareketle korpusun ana temalarını 4-6 başlık altında sentezle; her tema için kısa gerekçe ve temsilci terimleri ver. Türkçe yaz.',
-  bosluk:'Aşağıdaki bibliyometrik görünüme dayanarak bu alanda az çalışılmış görünen konuları ve olası araştırma boşluklarını Türkçe listele; her öneri için veriden hangi işarete dayandığını belirt. Spekülatif olduğun yerleri açıkça işaretle.',
-  karar:'Pilot Karar Senaryosu: Aşağıdaki bibliyometrik korpus özetine dayanarak bir bölüm/birim stratejik planına girdi olacak, veri temelli bir KARAR DESTEK RAPORU (politika bilgilendirme notu) hazırla. Yapı: (1) Mevcut durum özeti, (2) Güçlü üretim alanları, (3) Zayıf/boş alanlar, (4) İşbirliği yapısına ilişkin gözlemler, (5) 3-5 somut, uygulanabilir öneri. Her tespitte hangi veriye dayandığını parantez içinde belirt; verinin kapsam sınırlarını raporun sonunda tek paragrafta açıkla. Türkçe ve kurumsal bir dille yaz.'
+/* ================= ekran 1 ================= */
+const MODLAR = {
+  konu: {baslik:'Hangi konuyu inceleyelim?', lead:'Konuyu birkaç anahtar ifadeyle tanımlayın. Sonraki adımda bulunan yayınlardan örnekler göreceksiniz; ilgisiz çıkarsa ifadeyi düzeltebilirsiniz.', y1:2015, y2:BU_YIL-1, makale:true},
+  dergi:{baslik:'Hangi dergiyi inceleyelim?', lead:'Dergi adını yazmaya başlayın ve listeden seçin. Karşılaştırma için birden fazla dergi ekleyebilirsiniz.', y1:2015, y2:BU_YIL-1, makale:true},
+  kisi: {baslik:'Kimi inceleyelim?', lead:'Adı yazmaya başlayın ve listeden doğru profili seçin. Kurum bilgisi, aynı adı taşıyan kişileri ayırt etmenize yardım eder.', y1:'', y2:'', makale:false},
+  dosya:{baslik:'Hangi verileri analiz edelim?', lead:'Bir veri tabanından dışa aktardığınız dosyaları ya da kendi hazırladığınız tabloyu yükleyin.'}
 };
-document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  $('llmPrompt').value=PROMPTS[b.dataset.p];
-}));
-$('llmPrompt').addEventListener('input',()=>document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')));
-$('llmKey').value = localStorage.getItem('bl_key')||'';
-localStorage.removeItem('bl_prov');
+document.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>modSec(b.dataset.mod)));
+function modSec(mod){
+  ST.mod=mod; const M=MODLAR[mod];
+  $('s2h').textContent=M.baslik; $('s2lead').textContent=M.lead;
+  document.querySelectorAll('.mod-f').forEach(f=>f.hidden=f.dataset.for!==mod);
+  $('ortakAlan').hidden = mod==='dosya';
+  $('bulBtn').hidden = mod==='dosya';
+  $('duzeltBtn').hidden = mod==='dosya';
+  if(mod!=='dosya'){ $('y1').value=M.y1; $('y2').value=M.y2; $('sadeceMakale').checked=M.makale; }
+  onizlemeSifirla(); $('formNote').innerHTML=''; $('fileNote').innerHTML=''; DOSYA_RECS=[]; DOSYA_META=null;
+  git(2);
+  const ilk={konu:'konuQ',dergi:'dergiIn',kisi:'kisiIn'}[mod]; if(ilk) setTimeout(()=>$(ilk).focus(),50);
+}
+$('back1').addEventListener('click',()=>git(1));
+document.querySelectorAll('.ex').forEach(b=>b.addEventListener('click',()=>{ $('konuQ').value=b.textContent; $('konuQ').focus(); onizlemeSifirla(); }));
+$('konuQ').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('bulBtn').click(); } });
+['konuQ','y1','y2','sadeceMakale','konuTR'].forEach(id=>$(id).addEventListener('input',onizlemeSifirla));
 
-function refreshKeyState(){
-  const hasKey=Boolean(norm($('llmKey').value));
-  const state=$('llmKeyState');
-  state.textContent=hasKey?'Kaydedildi · bağlantı testine hazır':'Anahtar henüz girilmedi';
-  state.className='key-state'+(hasKey?' ready':'');
-  $('llmTest').disabled=!hasKey;
+/* son analiz kartı */
+async function resumeGoster(){
+  const d=await korpusOku();
+  if(!d){ $('resume').hidden=true; return; }
+  const t=new Date(d.saved).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  $('resumeTxt').textContent=(d.meta&&d.meta.baslik)||'Uzman modunda oluşturulan korpus';
+  $('resumeMeta').textContent=`${sayi(d.recs.length)} yayın · ${t}`;
+  $('resume').hidden=false;
+  $('resumeGo').onclick=()=>{ ST.recs=d.recs; ST.meta=d.meta||{mod:'uzman',tarih:new Date(d.saved).toISOString(),baslik:'Uzman modunda oluşturulan korpus'}; ST.yorum=(d.meta&&d.meta.yorum)||null; raporCiz(); git(3); };
+  $('resumeDel').onclick=async()=>{ if(!confirm('Kayıtlı analiz bu tarayıcıdan silinsin mi?')) return; await korpusKaydet([]); $('resume').hidden=true; };
 }
-function saveLLMSettings(){
-  const key=norm($('llmKey').value);
-  if(key) localStorage.setItem('bl_key',key);
-  else localStorage.removeItem('bl_key');
-  refreshKeyState();
-}
-$('llmKey').addEventListener('input',saveLLMSettings);
 
-function buildContext(){
-  const years=RECS.map(r=>r.year).filter(Boolean);
-  const cm=(f)=>countMap(f).slice(0,15).map(x=>`${x.label} (${x.n})`).join('; ');
-  const abs=RECS.filter(r=>r.abstract).slice(0,10).map(r=>`- ${r.title} (${r.year||'?'}): ${r.abstract.slice(0,400)}`).join('\n');
-  return `KORPUS ÖZETİ
-Yayın sayısı: ${RECS.length} | Yıl aralığı: ${years.length?Math.min(...years)+'-'+Math.max(...years):'?'} | Toplam atıf: ${RECS.reduce((s,r)=>s+r.cited,0)}
-Kaynak dağılımı: ${cm(RECS.map(r=>r.src))}
-En üretken yazarlar: ${cm(RECS.flatMap(r=>r.authors))}
-En üretken dergiler: ${cm(RECS.map(r=>r.journal).filter(Boolean))}
-En sık anahtar kelimeler: ${cm(RECS.flatMap(r=>r.keywords))}
-Diller: ${cm(RECS.map(r=>r.lang).filter(Boolean))}
-Örnek başlıklar: ${RECS.slice(0,20).map(r=>r.title).join(' | ').slice(0,2000)}
-${abs?'Örnek özetler:\n'+abs:''}`.slice(0,14000);
-}
-async function callGemini(key,messages){
-  const contents=messages.map(m=>({
-    role:m.role==='assistant'?'model':'user',
-    parts:[{text:m.content}]
-  }));
-  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',{
-    method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},
-    body:JSON.stringify({contents})});
-  if(!res.ok){
-    let detail='';
-    try{ detail=(await res.json()).error?.message||''; }catch(_){}
-    throw new Error(`Gemini HTTP ${res.status}${detail?': '+detail:''}`);
-  }
-  const j=await res.json();
-  const text=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||'').join('\n');
-  if(!text) throw new Error('Gemini boş yanıt döndürdü; istek güvenlik filtresince durdurulmuş olabilir');
-  return text;
-}
-/* messages: [{role:'user'|'assistant',content:string}] */
-async function callLLM(messages){
-  const key=norm($('llmKey').value); if(!key) throw new Error('API anahtarı girilmedi');
-  localStorage.setItem('bl_key',key);
-  return callGemini(key,messages);
-}
-refreshKeyState();
-$('llmTest').addEventListener('click',async ()=>{
-  const key=norm($('llmKey').value);
-  if(!key){ setStatus('llmSetupStat','Önce API anahtarınızı girin.','err'); return; }
-  $('llmTest').disabled=true;
-  setStatus('llmSetupStat','Bağlantı deneniyor…');
-  try{
-    await callGemini(key,[{role:'user',content:'Yalnızca “hazır” yaz.'}]);
-    saveLLMSettings();
-    setStatus('llmSetupStat','Bağlantı başarılı. Sonraki adım: bir hazır görev seçin veya isteminizi yazın, ardından “Modele gönder” düğmesine basın.','ok');
-  }catch(e){
-    setStatus('llmSetupStat','Bağlantı kurulamadı: '+e.message+' (anahtar, kota veya tarayıcı erişimini kontrol edin).','err');
-  }
-  $('llmTest').disabled=!norm($('llmKey').value);
-});
-
-/* ================= tematik sınıflandırma ================= */
-$('themeGo').addEventListener('click', async ()=>{
-  if(!RECS.length){ setStatus('themeStat','Önce veri yükleyin.','err'); return; }
-  $('themeGo').disabled=true;
-  try{
-    const items=RECS.map((r,i)=>({i,t:(r.title+' | '+r.keywords.join(', ')).slice(0,220)}));
-    const B=40; let done=0;
-    for(let s=0;s<items.length;s+=B){
-      const batch=items.slice(s,s+B);
-      setStatus('themeStat',`Sınıflandırılıyor… ${done}/${items.length}`);
-      const p=`Aşağıdaki akademik yayın kayıtlarını 5-8 kısa Türkçe tema etiketine ata. Tema etiketleri korpus genelinde tutarlı olsun (ör. "Yabancı Dil Öğretimi Yöntemleri", "Ders Kitabı İncelemeleri"). YALNIZCA şu biçimde geçerli JSON döndür, başka hiçbir şey yazma: {"atamalar":[{"i":<kayıt no>,"tema":"<etiket>"}]}\n\nKAYITLAR:\n`+batch.map(x=>`${x.i}: ${x.t}`).join('\n');
-      const out=await callLLM([{role:'user',content:p}]);
-      const m=out.match(/\{[\s\S]*\}/); if(!m) throw new Error('Model JSON döndürmedi');
-      for(const a of (JSON.parse(m[0]).atamalar||[])) if(RECS[a.i]) RECS[a.i].theme=norm(a.tema);
-      done+=batch.length;
-    }
-    setStatus('themeStat',`Tamamlandı: ${RECS.filter(r=>r.theme).length} kayıt tematik olarak kodlandı.`,'ok');
-    renderAll();
-  }catch(e){ setStatus('themeStat','Hata: '+e.message,'err'); }
-  $('themeGo').disabled=false;
-});
-
-/* ================= korpusla sohbet ================= */
-let CHAT=[];
-function pushChat(role,text){
-  CHAT.push({role,content:text});
-  const d=document.createElement('div'); d.className='msg '+(role==='user'?'u':'a'); d.textContent=text;
-  $('chatLog').appendChild(d); $('chatLog').scrollTop=$('chatLog').scrollHeight;
-}
-$('chatGo').addEventListener('click', async ()=>{
-  const q=norm($('chatIn').value); if(!q) return;
-  if(!RECS.length){ setStatus('chatStat','Önce veri yükleyin.','err'); return; }
-  $('chatIn').value=''; 
-  const first=CHAT.length===0;
-  pushChat('user', q);
-  const messages=[...CHAT];
-  if(first) messages[0]={role:'user',content:'Bir bibliyometrik korpus hakkında soruları yanıtlayan bir araştırma asistanısın. Yalnızca aşağıdaki korpus verisine dayan; veride olmayan şeyi bilmediğini söyle. Türkçe yanıtla.\n\n'+buildContext()+'\n\nSORU: '+q};
-  $('chatGo').disabled=true; setStatus('chatStat','Model düşünüyor…');
-  try{
-    const out=await callLLM(messages);
-    pushChat('assistant',out); $('chatStat').hidden=true;
-  }catch(e){ setStatus('chatStat','Hata: '+e.message,'err'); CHAT.pop(); }
-  $('chatGo').disabled=false;
-});
-$('chatClear').addEventListener('click',()=>{ CHAT=[]; $('chatLog').innerHTML=''; $('chatStat').hidden=true; });
-$('chatIn').addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); $('chatGo').click(); } });
-
-/* ================= doğrulama (precision / recall / F1) ================= */
-let GOLD=[];
-$('goldIn').addEventListener('change', async ev=>{
-  const f=ev.target.files[0]; if(!f) return;
-  let rows;
-  if(f.name.toLowerCase().endsWith('.xlsx')){
-    const wb=XLSX.read(await f.arrayBuffer());
-    rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-  } else {
-    rows=Papa.parse(await f.text(),{header:true,skipEmptyLines:true}).data;
-  }
-  const p={data:rows};
-  const g=k=>r=>norm(firstOf(r,k));
-  GOLD=p.data.map(r=>({
-    title:g(['baslik','title','Başlık','Title','yayin_adi'])(r),
-    year:+g(['yil','year','Yıl','Year'])(r)||null,
-    doi:g(['doi','DOI'])(r),
-    keywords:g(['anahtar_kelimeler','keywords','Anahtar Kelimeler','Author Keywords'])(r).split(/[;,]/).map(norm).filter(Boolean),
-    theme:g(['tema','theme','Tema'])(r)
-  })).filter(r=>r.title);
-  setStatus('valStat',`Altın Standart yüklendi: ${GOLD.length} kayıt.`,'ok');
-  ev.target.value='';
-});
-$('valGo').addEventListener('click', async ()=>{
-  if(!GOLD.length){ setStatus('valStat','Önce Altın Standart CSV yükleyin.','err'); return; }
-  if(!RECS.length){ setStatus('valStat','Korpus boş: önce 1. sekmeden veri yükleyin.','err'); return; }
-  const th=Math.min(1,Math.max(.5,+$('valTh').value||.9));
-  const matchOf=new Map(); // gold index -> rec
-  const usedRec=new Set();
-  $('valGo').disabled=true;
-  try{
-  // 1) DOI eşleşmesi
-  const recByDoi=new Map(RECS.filter(r=>r.doi).map(r=>[r.doi.toLowerCase(),r]));
-  GOLD.forEach((gr,gi)=>{ if(gr.doi&&recByDoi.has(gr.doi.toLowerCase())){ const r=recByDoi.get(gr.doi.toLowerCase()); if(!usedRec.has(r)){ matchOf.set(gi,r); usedRec.add(r);} } });
-  // 2) bulanık başlık (+ yıl toleransı ±1); anahtarlar bir kez hesaplanır, adaylar yıla göre kovalanır
-  const rkey=new Map(RECS.map(r=>[r,nkey(r.title)]));
-  const byYear=new Map(); const noYear=[];
-  for(const r of RECS){ if(r.year){ if(!byYear.has(r.year)) byYear.set(r.year,[]); byYear.get(r.year).push(r); } else noYear.push(r); }
-  const candidates=y=> y ? [...(byYear.get(y-1)||[]),...(byYear.get(y)||[]),...(byYear.get(y+1)||[]),...noYear] : RECS;
-  for(let gi=0;gi<GOLD.length;gi++){
-    if(matchOf.has(gi)) continue;
-    const gr=GOLD[gi], gk=nkey(gr.title); let best=null,bs=0;
-    for(const r of candidates(gr.year)){ if(usedRec.has(r)) continue;
-      const s=similarAt(gk,rkey.get(r),Math.max(th,bs)); if(s>bs){bs=s;best=r;} }
-    if(best&&bs>=th){ matchOf.set(gi,best); usedRec.add(best); }
-    if(gi%25===0){ setStatus('valStat',`Eşleştiriliyor… ${gi}/${GOLD.length}`); await tick(); }
-  }
-  const TP=matchOf.size, FN=GOLD.length-TP, FP=RECS.length-TP;
-  const prec=TP/(TP+FP)||0, rec=TP/(TP+FN)||0, f1=(prec+rec)?2*prec*rec/(prec+rec):0;
-  // anahtar kelime ve tema Jaccard'ı (eşleşen çiftler üzerinde)
-  let kwJ=[], thAgree=0, thN=0;
-  for(const [gi,r] of matchOf){
-    const g=GOLD[gi];
-    if(g.keywords.length&&r.keywords.length){
-      const A=new Set(g.keywords.map(nkey)), B=new Set(r.keywords.map(nkey));
-      const inter=[...A].filter(x=>B.has(x)).length;
-      kwJ.push(inter/(A.size+B.size-inter));
-    }
-    if(g.theme&&r.theme){ thN++; if(nkey(g.theme)===nkey(r.theme)) thAgree++; }
-  }
-  const kwAvg=kwJ.length?(kwJ.reduce((a,b)=>a+b,0)/kwJ.length):null;
-  const cards=[[TP,'doğru eşleşme (TP)'],[FP,'fazla kayıt (FP)'],[FN,'eksik kayıt (FN)'],
-    [(prec*100).toFixed(1)+'%','precision'],[(rec*100).toFixed(1)+'%','recall'],[(f1*100).toFixed(1)+'%','F1-score']];
-  if(kwAvg!==null) cards.push([(kwAvg*100).toFixed(1)+'%','anahtar kelime Jaccard (ort.)']);
-  if(thN) cards.push([(100*thAgree/thN).toFixed(1)+'%','tema uyuşması ('+thN+' çift)']);
-  $('valCards').innerHTML=cards.map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
-  const missed=GOLD.filter((g,i)=>!matchOf.has(i));
-  const extra=RECS.filter(r=>!usedRec.has(r));
-  const none=(cols,msg)=>`<tr><td colspan="${cols}" class="empty" style="padding:16px 0">${msg}</td></tr>`;
-  $('missTable').innerHTML='<tr><th>Başlık</th><th>Yıl</th></tr>'+(missed.length?missed.slice(0,20).map(g=>`<tr><td>${esc(g.title)}</td><td class="num">${esc(g.year||'')}</td></tr>`).join(''):none(2,'Eksik kayıt yok: Altın Standarttaki tüm kayıtlar korpusta bulundu.'));
-  $('extraTable').innerHTML='<tr><th>Başlık</th><th>Yıl</th><th>Kaynak</th></tr>'+(extra.length?extra.slice(0,20).map(r=>`<tr><td>${esc(r.title)}</td><td class="num">${esc(r.year||'')}</td><td>${esc(r.src)}</td></tr>`).join(''):none(3,'Fazla kayıt yok: korpustaki tüm kayıtlar Altın Standartta bulundu.'));
-  $('valBody').style.display='block';
-  setStatus('valStat',`Karşılaştırma tamamlandı (eşik ${th}). Altın Standart: ${GOLD.length} · Korpus: ${RECS.length}`,'ok');
-  $('valReport').onclick=()=>{
-    const rows=[
-      ...missed.map(g=>({durum:'FN: Altın Standartta var, korpusta yok',baslik:g.title,yil:g.year,kaynak:''})),
-      ...extra.map(r=>({durum:'FP: korpusta var, Altın Standartta yok',baslik:r.title,yil:r.year,kaynak:r.src})),
-      {durum:'ÖZET',baslik:`TP=${TP} FP=${FP} FN=${FN} precision=${(prec*100).toFixed(2)}% recall=${(rec*100).toFixed(2)}% F1=${(f1*100).toFixed(2)}%`,yil:'',kaynak:''}
-    ];
-    dl('bibliolab_dogrulama_raporu.csv',String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
+/* ================= otomatik tamamlama ================= */
+function otoTamamla(inputId, listId, chipsId, turFn, onDegis){
+  const inp=$(inputId), list=$(listId), chips=$(chipsId);
+  const ac={ secili:[], aktif:-1, sonuc:[], seq:0 };
+  const kapat=()=>{ list.classList.remove('on'); inp.setAttribute('aria-expanded','false'); ac.aktif=-1; };
+  const ipucu=(r,tur)=>{
+    const parca=[];
+    if(r.hint) parca.push(r.hint);
+    if(tur==='sources'&&r.external_id) parca.push('ISSN '+r.external_id);
+    if(r.works_count!=null) parca.push(sayi(r.works_count)+' yayın');
+    return parca.join(' · ');
   };
-  } finally { $('valGo').disabled=false; }
-});
-$('llmGo').addEventListener('click', async ()=>{
-  if(!RECS.length){ setStatus('llmStat','Önce veri yükleyin.','err'); return; }
-  const key=norm($('llmKey').value); if(!key){ setStatus('llmStat','API anahtarı girin.','err'); return; }
-  const task=norm($('llmPrompt').value); if(!task){ setStatus('llmStat','Bir görev seçin veya istem yazın.','err'); return; }
-  const prompt = task+'\n\n---\n'+buildContext();
-  $('llmGo').disabled=true; setStatus('llmStat','Model çağrılıyor…');
-  try{
-    const out = await callLLM([{role:'user',content:prompt}]);
-    $('llmOut').style.display='block'; $('llmOut').textContent=out;
-    setStatus('llmStat','Tamamlandı.','ok');
-  }catch(e){ setStatus('llmStat','Hata: '+e.message+' (anahtar, kota veya CORS kontrol edin)','err'); }
-  $('llmGo').disabled=false;
-});
-
-/* ================= dışa aktar ================= */
-function dl(name,content,type){ const a=document.createElement("a"); const u=URL.createObjectURL(new Blob([content],{type})); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),2000); }
-$('expCsv').addEventListener('click',()=>{
-  if(!RECS.length) return;
-  const rows=RECS.map(r=>({baslik:r.title,yazarlar:r.authors.join('; '),yil:r.year,dergi:r.journal,tur:r.type||'',
-    anahtar_kelimeler:r.keywords.join('; '),ozet:r.abstract,atif:r.cited,kurumlar:r.insts.join('; '),
-    ulkeler:r.countries.join('; '),doi:r.doi,dil:r.lang,tema:r.theme||'',kaynak:r.src}));
-  dl('bibliolab_korpus.csv',String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
-});
-$('expJson').addEventListener('click',()=>{ if(RECS.length) dl('bibliolab_korpus.json',JSON.stringify(RECS,null,2),'application/json'); });
-function renderExport(){
-  const n=RECS.length, themed=RECS.filter(r=>r.theme).length;
-  $('expCsv').disabled=$('expJson').disabled=!n;
-  $('expInfo').textContent = n
-    ? `${n} kayıt dışa aktarılmaya hazır${themed?`; ${themed} kayıtta tema etiketi var`:''}.`
-    : 'Dışa aktarılacak kayıt yok. Önce 1. sekmeden veri yükleyin.';
+  const ciz=()=>{
+    const tur=turFn();
+    if(!ac.sonuc.length){ list.innerHTML='<li class="note" role="option" aria-disabled="true">Sonuç yok. Yazımı değiştirmeyi deneyin.</li>'; }
+    else list.innerHTML=ac.sonuc.map((r,i)=>`<li role="option" id="${listId}-${i}" aria-selected="${i===ac.aktif}" data-i="${i}"><b>${esc(r.display_name)}</b><small>${esc(ipucu(r,tur))}</small></li>`).join('');
+    list.classList.add('on'); inp.setAttribute('aria-expanded','true');
+    inp.setAttribute('aria-activedescendant', ac.aktif>=0? `${listId}-${ac.aktif}` : '');
+  };
+  const chipCiz=()=>{
+    chips.innerHTML=ac.secili.map((s,i)=>`<span class="chip">${esc(s.ad)}${s.ek?` <small>${esc(s.ek)}</small>`:''}<button type="button" aria-label="${esc(s.ad)} seçimini kaldır" data-i="${i}">×</button></span>`).join('');
+  };
+  chips.addEventListener('click',e=>{ const b=e.target.closest('button[data-i]'); if(!b) return; ac.secili.splice(+b.dataset.i,1); chipCiz(); onDegis(); inp.focus(); });
+  const ekle=(r)=>{
+    if(!r) return;
+    if(!ac.secili.some(s=>s.id===r.id)) ac.secili.push({id:r.id, ad:r.display_name, ek:r.hint||''});
+    inp.value=''; kapat(); chipCiz(); onDegis();
+  };
+  list.addEventListener('mousedown',e=>{ const li=e.target.closest('li[data-i]'); if(!li) return; e.preventDefault(); ekle(ac.sonuc[+li.dataset.i]); });
+  let zaman;
+  inp.addEventListener('input',()=>{
+    clearTimeout(zaman); const q=inp.value;
+    if(norm(q).length<2){ kapat(); return; }
+    zaman=setTimeout(async()=>{
+      const my=++ac.seq;
+      try{ const r=await oaAutocomplete(turFn(), q); if(my!==ac.seq) return; ac.sonuc=r; ac.aktif=r.length?0:-1; ciz(); }
+      catch(e){ if(my!==ac.seq) return; list.innerHTML=`<li class="note">${esc(e.message)}</li>`; list.classList.add('on'); }
+    },280);
+  });
+  inp.addEventListener('keydown',async e=>{
+    const acik=list.classList.contains('on');
+    if(e.key==='ArrowDown'&&acik){ e.preventDefault(); ac.aktif=Math.min(ac.aktif+1,ac.sonuc.length-1); ciz(); }
+    else if(e.key==='ArrowUp'&&acik){ e.preventDefault(); ac.aktif=Math.max(ac.aktif-1,0); ciz(); }
+    else if(e.key==='Escape'){ kapat(); }
+    else if(e.key==='Enter'){
+      e.preventDefault();
+      const q=norm(inp.value);
+      if(turFn()==='sources' && /^\d{4}-?\d{3}[\dXx]$/.test(q)){ // ISSN ile doğrudan dergi
+        const issn=q.length===8? q.slice(0,4)+'-'+q.slice(4) : q;
+        try{ const s=await oaGet(oaURL('sources/issn:'+issn.toUpperCase())); ekle({id:s.id,display_name:s.display_name,hint:'ISSN '+issn.toUpperCase()}); }
+        catch(err){ $('formNote').innerHTML=`<div class="note err">${esc(issn)} ISSN'li bir dergi OpenAlex'te bulunamadı.</div>`; }
+        return;
+      }
+      if(acik&&ac.aktif>=0) ekle(ac.sonuc[ac.aktif]);
+    }
+  });
+  inp.addEventListener('blur',()=>setTimeout(kapat,120));
+  return { get secili(){ return ac.secili; }, temizle(){ ac.secili=[]; chipCiz(); inp.value=''; kapat(); } };
 }
-
-/* ================= sekmeler ================= */
-const isActive = t => $('p-'+t).classList.contains('active');
-let anDirty = true, agDirty = true; // gizli sekmeler veri değişince yalnızca "kirli" işaretlenir
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('section.panel').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active'); $('p-'+b.dataset.t).classList.add('active');
-  if(b.dataset.t==='analiz' && anDirty) renderAnaliz();
-  if(b.dataset.t==='ag' && agDirty) renderAg();
+const dergiAC = otoTamamla('dergiIn','dergiList','dergiChips',()=>'sources',onizlemeSifirla);
+const kisiAC  = otoTamamla('kisiIn','kisiList','kisiChips',()=>ST.kisiTur,onizlemeSifirla);
+document.querySelectorAll('[data-kt]').forEach(b=>b.addEventListener('click',()=>{
+  ST.kisiTur=b.dataset.kt;
+  document.querySelectorAll('[data-kt]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  const kurum=ST.kisiTur==='institutions';
+  $('kisiLb').textContent=kurum?'Kurum':'Araştırmacı';
+  $('kisiIn').placeholder=kurum?'Üniversite ya da kurum adı yazın':'Ad soyad yazın';
+  $('kisiHelp').textContent=kurum?'Kurumun fakülte, enstitü ve hastane gibi alt birimleri de dahil edilir.':'Aynı kişiye ait birden fazla profil görürseniz hepsini seçin; OpenAlex bazen bir araştırmacının yayınlarını ayrı profillere böler. Kurum adı altta görünür.';
+  kisiAC.temizle(); onizlemeSifirla(); $('kisiIn').focus();
 }));
-/* veri değişince: sağlık raporu hemen, görünür sekme hemen, gizli sekmeler açıldıklarında çizilir; korpus tarayıcıya kaydedilir */
-function renderAll(){
-  renderHealth(); renderExport(); anDirty=true; agDirty=true; saveCorpus();
-  if(isActive('analiz')) renderAnaliz();
-  if(isActive('ag')) renderAg();
-}
-/* ================= kalıcı korpus: yalnızca bu tarayıcıda (IndexedDB), hiçbir sunucuya gönderilmez ================= */
-const DB_NAME='bibliolab', DB_STORE='kv';
-function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open(DB_NAME,1);
-  r.onupgradeneeded=()=>r.result.createObjectStore(DB_STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
-async function idbDo(mode,fn){ const db=await idbOpen(); return new Promise((res,rej)=>{
-  const tx=db.transaction(DB_STORE,mode); const req=fn(tx.objectStore(DB_STORE));
-  tx.oncomplete=()=>{ db.close(); res(req&&req.result); }; tx.onerror=tx.onabort=()=>{ db.close(); rej(tx.error); }; }); }
-let saveT;
-function saveCorpus(){
-  clearTimeout(saveT);
-  saveT=setTimeout(()=>{
-    const job = RECS.length ? idbDo('readwrite',st=>st.put({v:1,saved:Date.now(),recs:RECS},'corpus')) : idbDo('readwrite',st=>st.delete('corpus'));
-    job.catch(e=>console.warn('Korpus tarayıcıya kaydedilemedi:',e));
-  },400);
-}
-async function restoreCorpus(){
-  try{
-    const d=await idbDo('readonly',st=>st.get('corpus'));
-    if(!d||!Array.isArray(d.recs)||!d.recs.length||RECS.length) return;
-    RECS=d.recs; refreshCount(); renderAll();
-    const t=new Date(d.saved).toLocaleString('tr-TR',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    $('restoreNote').textContent=`Önceki oturumdan geri yüklendi (${t}).`; $('restoreNote').hidden=false;
-  }catch(e){ console.warn('Kayıtlı korpus okunamadı:',e); }
-}
-restoreCorpus();
 
-let resizeT;
-window.addEventListener('resize',()=>{ clearTimeout(resizeT); resizeT=setTimeout(()=>{
-  if(!RECS.length) return;
-  if(isActive('ag')) drawNet();
-  if(isActive('analiz')) drawCanvasViz();
-},200); });
+/* ================= sorgu kurma ================= */
+const kisaId = id => norm(id).replace('https://openalex.org/','');
+function yilAraligi(){
+  let a=parseInt($('y1').value,10), b=parseInt($('y2').value,10);
+  if(isNaN(a)) a=null; if(isNaN(b)) b=null;
+  if(a&&b&&a>b) [a,b]=[b,a];
+  return [a,b];
+}
+function yilMetni(a,b){
+  if(a&&b) return a===b? `${a} yılında` : `${a}–${b} yılları arasında`;
+  if(a) return `${a} yılından bu yana`;
+  if(b) return `${b} yılına kadar`;
+  return '';
+}
+const listeMetni = arr => arr.length<=1 ? (arr[0]||'') : arr.slice(0,-1).join(', ')+' ve '+arr[arr.length-1];
+function sorguKur(){
+  const f=[]; const [a,b]=yilAraligi(); const makale=$('sadeceMakale').checked;
+  let baslik='', kapsam='';
+  if(ST.mod==='konu'){
+    const q=oaTemizle($('konuQ').value);
+    if(!q) throw new Error('Bir konu ifadesi yazın.');
+    f.push('title_and_abstract.search:'+q);
+    const tr=$('konuTR').checked; if(tr) f.push('authorships.institutions.country_code:TR');
+    baslik=q.replace(/"/g,'');
+    kapsam=`Arama, başlığında ya da özetinde ${q.replace(/"([^"]+)"/g,'“$1”')} ifadesi geçen${yilMetni(a,b)?', '+yilMetni(a,b)+' yayımlanmış':''}${tr?' ve en az bir yazarı Türkiye\'deki bir kurumda bulunan':''} ${makale?'dergi makalelerini':'yayınları'} kapsamaktadır.`;
+  } else if(ST.mod==='dergi'){
+    const s=dergiAC.secili; if(!s.length) throw new Error('Listeden en az bir dergi seçin.');
+    f.push('primary_location.source.id:'+s.map(x=>kisaId(x.id)).join('|'));
+    baslik=listeMetni(s.map(x=>x.ad));
+    kapsam=`Arama, ${listeMetni(s.map(x=>'“'+x.ad+'”'))} ${s.length>1?'dergilerinde':'dergisinde'}${yilMetni(a,b)?' '+yilMetni(a,b):''} yayımlanmış ${makale?'tüm makaleleri':'tüm yayınları'} kapsamaktadır.`;
+  } else if(ST.mod==='kisi'){
+    const s=kisiAC.secili; const kurum=ST.kisiTur==='institutions';
+    if(!s.length) throw new Error(kurum?'Listeden bir kurum seçin.':'Listeden en az bir araştırmacı profili seçin.');
+    const ids=s.map(x=>kisaId(x.id)).join('|');
+    f.push(kurum? 'authorships.institutions.lineage:'+ids : 'authorships.author.id:'+ids);
+    baslik=listeMetni([...new Set(s.map(x=>x.ad))]);
+    kapsam = kurum
+      ? `Arama, ${listeMetni(s.map(x=>'“'+x.ad+'”'))} (alt birimleri dahil) adresli yazarların${yilMetni(a,b)?' '+yilMetni(a,b):''} yayımladığı ${makale?'dergi makalelerini':'tüm yayınları'} kapsamaktadır.`
+      : `Arama, OpenAlex'te ${listeMetni([...new Set(s.map(x=>'“'+x.ad+'”'))])} adına kayıtlı ${s.length} yazar profilinin${yilMetni(a,b)?' '+yilMetni(a,b):''} yayımlanmış ${makale?'dergi makalelerini':'tüm yayınlarını'} kapsamaktadır.`;
+  }
+  if(a) f.push(`from_publication_date:${a}-01-01`);
+  if(b) f.push(`to_publication_date:${b}-12-31`);
+  if(makale) f.push('type:article');
+  return { filtre:f.join(','), baslik, kapsam, y1:a, y2:b, makale };
+}
+
+/* ================= önizleme ================= */
+function onizlemeSifirla(){ $('preview').classList.remove('on'); $('prog').hidden=true; ST.onizleme=null; }
+$('bulBtn').addEventListener('click', async ()=>{
+  $('formNote').innerHTML='';
+  let s; try{ s=sorguKur(); }catch(e){ $('formNote').innerHTML=`<div class="note err">${esc(e.message)}</div>`; return; }
+  $('bulBtn').disabled=true; $('bulBtn').textContent='Aranıyor…';
+  try{
+    const p=await oaOnizle(s.filtre);
+    ST.onizleme={...s, ...p};
+    $('pvN').textContent=sayi(p.count);
+    $('pvTxt').textContent= p.count===1?'yayın bulundu':'yayın bulundu';
+    $('pvSample').innerHTML = p.ornek.length ? `<p class="help" style="margin-top:0">En çok atıf alan örnekler. Aradığınız yayınlar bunlara benziyorsa devam edin.</p><ul class="pv-list">${p.ornek.map(o=>`<li>${esc(o.title)}<small>${esc([o.year,o.journal,sayi(o.cited)+' atıf'].filter(Boolean).join(' · '))}</small></li>`).join('')}</ul>` : '';
+    let w='';
+    if(!p.count) w=`<div class="note warn">Hiç yayın bulunamadı. ${ST.mod==='konu'?'Daha genel ifadeler kullanmayı, farklı dillerdeki karşılıkları OR ile eklemeyi ya da yıl aralığını genişletmeyi deneyin.':'Yıl aralığını genişletmeyi ya da yayın türü sınırını kaldırmayı deneyin.'}</div>`;
+    else if(p.count>OA_MAX) w=`<div class="note warn"><b>Kapsam çok geniş.</b> Raporda yalnızca en çok atıf alan ${sayi(OA_MAX)} yayın kullanılabilir; bu seçki alanın tamamını temsil etmez. Daha güvenilir sonuç için yıl aralığını daraltın ya da ifadeyi özelleştirin.</div>`;
+    else if(p.count<30) w=`<div class="note">Az sayıda yayın bulundu. Rapor oluşturulabilir, ancak eğilimleri temkinle yorumlayın.</div>`;
+    else { const sn=Math.max(3,Math.ceil(p.count/200)*1.2); w=`<p class="help">Tüm kayıtların alınması yaklaşık ${sn<60?Math.round(sn)+' saniye':Math.round(sn/60)+' dakika'} sürer.</p>`; }
+    $('pvWarn').innerHTML=w;
+    $('raporBtn').hidden = !p.count;
+    $('preview').classList.add('on');
+    $('raporBtn').focus({preventScroll:true});
+    $('preview').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){ $('formNote').innerHTML=`<div class="note err">${esc(e.message)}</div>`; }
+  $('bulBtn').disabled=false; $('bulBtn').textContent='Yayınları bul';
+});
+$('duzeltBtn').addEventListener('click',()=>{ onizlemeSifirla(); const ilk={konu:'konuQ',dergi:'dergiIn',kisi:'kisiIn'}[ST.mod]; if(ilk) $(ilk).focus(); });
+
+/* ================= veri çekme ================= */
+$('raporBtn').addEventListener('click', async ()=>{
+  if(ST.mod==='dosya'){ return raporaGec(DOSYA_RECS, DOSYA_META); }
+  const p=ST.onizleme; if(!p) return;
+  $('raporBtn').disabled=true; $('duzeltBtn').disabled=true; $('bulBtn').disabled=true;
+  $('prog').hidden=false; ilerle(0,Math.min(p.count,OA_MAX));
+  try{
+    const {recs,kesik}=await oaHepsi(p.filtre, p.count, ilerle);
+    const {eklenen,dup}=tekillestir([],recs);
+    const meta={ mod:ST.mod, kisiTur:ST.mod==='kisi'?ST.kisiTur:null, baslik:p.baslik, kapsam:p.kapsam, url:p.url, tarih:new Date().toISOString(),
+      bulunan:p.count, alinan:recs.length, mukerrer:dup, kesik, y1:p.y1, y2:p.y2, makale:p.makale };
+    raporaGec(eklenen, meta);
+  }catch(e){
+    $('progTxt').innerHTML=`<span style="color:var(--brick)">${esc(e.message)}</span>`;
+  }
+  $('raporBtn').disabled=false; $('duzeltBtn').disabled=false; $('bulBtn').disabled=false;
+});
+function ilerle(n,toplam){
+  const y=toplam? Math.round(100*n/toplam) : 0;
+  $('progI').style.width=y+'%'; $('progBar').setAttribute('aria-valuenow',y);
+  $('progTxt').textContent=`${sayi(n)} / ${sayi(toplam)} kayıt alındı`;
+}
+function raporaGec(recs, meta){
+  ST.recs=recs; ST.meta=meta; ST.yorum=null;
+  korpusKaydet(recs, meta);
+  raporCiz(); git(3);
+}
+
+/* ================= dosya yükleme ================= */
+let DOSYA_RECS=[], DOSYA_META=null;
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop',e=>dosyaOku([...e.dataTransfer.files]));
+$('fileIn').addEventListener('change',e=>{ dosyaOku([...e.target.files]); e.target.value=''; });
+async function dosyaOku(files){
+  if(!files.length) return;
+  const satir=[]; let okunan=0, dup=0;
+  for(const f of files){
+    try{ const recs=await parseFile(f); okunan+=recs.length; const t=tekillestir(DOSYA_RECS,recs); DOSYA_RECS.push(...t.eklenen); dup+=t.dup; satir.push(`<li>${esc(f.name)}: ${sayi(recs.length)} kayıt</li>`); }
+    catch(e){ satir.push(`<li style="color:var(--brick)">${esc(f.name)}: okunamadı (${esc(e.message)})</li>`); }
+  }
+  const onceki=DOSYA_META||{dosyalar:[],okunan:0,mukerrer:0};
+  DOSYA_META={ mod:'dosya', baslik:'', dosyalar:[...onceki.dosyalar,...files.map(f=>f.name)], okunan:onceki.okunan+okunan, mukerrer:onceki.mukerrer+dup, tarih:new Date().toISOString() };
+  DOSYA_META.baslik = DOSYA_META.dosyalar.length===1? DOSYA_META.dosyalar[0] : `${DOSYA_META.dosyalar.length} dosyadan oluşan veri seti`;
+  $('fileNote').innerHTML=`<div class="note ${DOSYA_RECS.length?'ok':'err'}"><ul style="margin-left:18px">${satir.join('')}</ul>${dup?`<p style="margin-top:6px">${sayi(dup)} yinelenen kayıt ayıklandı.</p>`:''}</div>`;
+  $('pvN').textContent=sayi(DOSYA_RECS.length); $('pvTxt').textContent='kayıt analize hazır';
+  $('pvSample').innerHTML=''; $('pvWarn').innerHTML = DOSYA_RECS.length && DOSYA_RECS.length<30 ? '<div class="note">Az sayıda kayıt var; eğilimleri temkinle yorumlayın.</div>' : '';
+  $('raporBtn').hidden=!DOSYA_RECS.length; $('duzeltBtn').hidden=true; $('prog').hidden=true;
+  $('preview').classList.add('on');
+}
+
+/* ================= rapor ================= */
+Chart.defaults.font.family="'IBM Plex Sans',sans-serif"; Chart.defaults.font.size=12; Chart.defaults.color='#68738A';
+Chart.defaults.plugins.tooltip.backgroundColor='#1B2A41'; Chart.defaults.plugins.tooltip.padding=10; Chart.defaults.plugins.tooltip.cornerRadius=6;
+Chart.defaults.plugins.tooltip.titleFont={weight:'600'}; Chart.defaults.plugins.tooltip.displayColors=false;
+let CHARTS=[];
+const kisalt=(s,n=42)=> s.length>n? s.slice(0,n-1)+'…' : s;
+function cizYatay(cv, items, birim, renk=INK){
+  const h=Math.max(120, items.length*30+30);
+  cv.parentElement.style.height=h+'px';
+  CHARTS.push(new Chart(cv,{type:'bar',
+    data:{labels:items.map(i=>kisalt(i.label, cv.parentElement.clientWidth<520?22:42)), datasets:[{data:items.map(i=>i.n), backgroundColor:renk, borderRadius:4, borderSkipped:'start', maxBarThickness:20, categoryPercentage:.8}]},
+    options:{indexAxis:'y',maintainAspectRatio:false,responsive:true,layout:{padding:{left:4}},
+      scales:{x:{beginAtZero:true,grid:{color:'#E6EAF0'},border:{display:false},ticks:{precision:0,callback:v=>sayi(v)}},y:{grid:{display:false},border:{color:'#D7DDE7'},ticks:{color:'#33415C',font:{size:12.5}}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>items[c[0].dataIndex].label,label:c=>sayi(c.raw)+' '+birim}}}}}));
+}
+function cizYillar(cv, M){
+  cv.parentElement.style.height='280px';
+  const seri=M.seri;
+  CHARTS.push(new Chart(cv,{type:'bar',
+    data:{labels:seri.map(([y])=>String(y)), datasets:[{data:seri.map(([,n])=>n), backgroundColor:seri.map(([y])=>y===M.buYil?GRAY:INK), borderRadius:4, borderSkipped:'start', maxBarThickness:24, categoryPercentage:.85}]},
+    options:{maintainAspectRatio:false,responsive:true,
+      scales:{y:{beginAtZero:true,grid:{color:'#E6EAF0'},border:{display:false},ticks:{precision:0,callback:v=>sayi(v)}},x:{grid:{display:false},border:{color:'#D7DDE7'},ticks:{autoSkip:true,maxRotation:0}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sayi(c.raw)+' yayın'+(seri[c.dataIndex][0]===M.buYil?' (yıl sürüyor)':'')}}}}}));
+}
+function tablo(kolonlar, satirlar){
+  return `<div class="tscroll"><table><thead><tr>${kolonlar.map(k=>`<th${k.n?' class="n"':''}>${esc(k.b)}</th>`).join('')}</tr></thead><tbody>${satirlar.map(s=>`<tr>${s.map((v,i)=>`<td${kolonlar[i].n?' class="n"':''}>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const detay = (icerik, ozet='Sayıları tablo olarak gör') => `<details class="tbl"><summary>${ozet}</summary>${icerik}</details>`;
+function panel(baslik, alt, govde){ return `<div class="panel">${baslik?`<h3>${baslik}</h3>`:''}${alt?`<p class="ph">${alt}</p>`:''}${govde}</div>`; }
+const kanvas = id => `<div class="cbox"><canvas id="${id}" role="img"></canvas></div>`;
+
+function raporCiz(){
+  CHARTS.forEach(c=>c.destroy()); CHARTS=[];
+  const R=ST.recs, meta=ST.meta||{}, M=metrikler(R);
+  ST.M=M;
+  const oa = R.some(r=>r.src==='OpenAlex');
+  const konuVar = M.konular.length>0, fwVar = M.fwciN>0;
+  const tarih = meta.tarih? new Date(meta.tarih).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '';
+  const kaynak = meta.mod==='dosya' ? 'Yüklenen dosyalar' : (oa?'OpenAlex':'Karma veri');
+  const bol=[]; // [id, kısa ad]
+
+  /* --- başlık --- */
+  let h=`<div class="r-head">
+    <div><h1 class="q" id="s3h" tabindex="-1">${esc(meta.baslik||'Yayın analizi')}</h1>
+    <p class="meta">${esc([kaynak,tarih,sayi(M.N)+' yayın',M.y0?`${M.y0}–${M.y1}`:''].filter(Boolean).join(' · '))}</p></div>
+    <div class="r-actions">
+      <button class="btn alt sm" id="pdfBtn">PDF olarak kaydet</button>
+      <button class="btn alt sm" id="csvBtn">Verileri indir</button>
+      <button class="btn ghost sm" id="yeniBtn">Yeni analiz</button>
+    </div></div>`;
+
+  /* --- öne çıkanlar --- */
+  const tiles=[];
+  if(M.buyume) tiles.push(['Ortalama yıllık büyüme', (M.buyume.oran>=0?'+':'')+yuzde(M.buyume.oran,1), `${M.buyume.y0}–${M.buyume.y1} eğilimi`]);
+  tiles.push(['h-indeksi', sayi(M.h), `en az ${sayi(M.h)} atıf almış ${sayi(M.h)} yayın`]);
+  tiles.push(['Toplam atıf', sayi(M.toplamAtif), `yayın başına ortanca ${sayi(M.medAtif)}`]);
+  if(fwVar) tiles.push(['Alana göre atıf etkisi', sayi(M.fwciMed,2), '1 = dünya ortalaması (ortanca FWCI)']);
+  if(M.oaPay!=null) tiles.push(['Açık erişim', yuzde(M.oaPay), 'yayınların ücretsiz okunabilen kısmı']);
+  if(M.uluslararasi!=null && oa) tiles.push(['Uluslararası işbirliği', yuzde(M.uluslararasi), 'birden çok ülkeden yazarı olan yayınlar']);
+  tiles.push(['Yayın başına yazar', sayi(M.ortYazar,1), `tek yazarlı yayınlar ${yuzde(M.tekYazar)}`]);
+  h+=`<section class="sec" id="b-ozet" style="margin-top:0"><h2 class="sr">Öne çıkanlar</h2>
+    <div class="tiles"><div class="tile hero"><div class="lbl">Yayın</div><div class="val">${sayi(M.N)}</div><div class="sub">${M.y0?`${M.y0}–${M.y1} arasında`:''}${meta.kesik?'<br>en çok atıf alan seçki':''}</div></div>
+    ${tiles.slice(0,6).map(([l,v,s])=>`<div class="tile"><div class="lbl">${l}</div><div class="val">${v}</div><div class="sub">${s}</div></div>`).join('')}</div>
+    <div class="ai" id="aiKart"></div></section>`;
+
+  /* --- büyüme --- */
+  bol.push(['b-buyume','Gelişim']);
+  let buy='';
+  if(M.buyume){
+    const yon=M.buyume.oran>=0?'arttı':'azaldı';
+    buy=`${M.buyume.y0}–${M.buyume.y1} arasında yayın sayısı yılda ortalama <strong>${yuzde(Math.abs(M.buyume.oran),1)} ${yon}</strong>.`;
+    if(M.buyume.r2!=null && M.buyume.r2<.5) buy+=' Yıllar arasındaki dalgalanma yüksek olduğundan bu oranı temkinle yorumlayın.';
+  } else buy='Yıllık eğilim hesaplamak için en az dört tamamlanmış yıl gerekir.';
+  if(M.zirve) buy+=` En çok yayın <strong>${M.zirve[0]}</strong> yılında yapıldı (${sayi(M.zirve[1])}).`;
+  h+=`<section class="sec" id="b-buyume"><h2>Bu alan büyüyor mu?</h2><p class="ans">${buy}</p>
+    ${panel('Yıllara göre yayın sayısı', M.sonYilEksik?`${M.buYil} yılı sürdüğü için gri gösterildi ve eğilim hesabına katılmadı.`:'', kanvas('chYil')+detay(tablo([{b:'Yıl'},{b:'Yayın',n:1}],M.seri.map(([y,n])=>[y,sayi(n)]))))}</section>`;
+
+  /* --- konular --- */
+  bol.push(['b-konu','Konular']);
+  let kon='';
+  if(konuVar){
+    const t=M.konular[0], kapsam=R.filter(r=>r.topic).length;
+    kon=`En sık görülen konu <strong>${esc(t.label)}</strong> (${sayi(t.n)} yayın, ${yuzde(t.n/kapsam)}).`;
+    const yk=M.konuDegisim&&M.konuDegisim.yukselen[0];
+    if(yk) kon+= yk.label===t.label ? ' Bu konu aynı zamanda son dönemde payı en çok artan konu.' : ` Son dönemde payı en çok artan konu <strong>${esc(yk.label)}</strong>.`;
+  } else kon = M.anahtar.length? `En sık kullanılan anahtar kelime <strong>${esc(M.anahtar[0].label)}</strong> (${sayi(M.anahtar[0].n)} yayın).` : 'Bu veri setinde konu ya da anahtar kelime bilgisi bulunmuyor.';
+  h+=`<section class="sec" id="b-konu"><h2>Hangi konular çalışılıyor?</h2><p class="ans">${kon}</p>`;
+  if(konuVar){
+    h+=panel('En sık 12 konu','OpenAlex her yayına makine öğrenmesiyle bir ana konu atar. Alan genelinde karşılaştırılabilir bir sınıflandırmadır; tek tek yayınlarda hata yapabilir.',
+      kanvas('chKonu')+detay(tablo([{b:'Konu'},{b:'Alt alan'},{b:'Yayın',n:1}], M.konular.slice(0,30).map(k=>{ const r=R.find(x=>x.topic===k.label); return [esc(k.label),esc(r&&r.subfield||''),sayi(k.n)]; })),'İlk 30 konuyu tablo olarak gör'));
+    const D=M.konuDegisim;
+    if(D && (D.yukselen.length||D.gerileyen.length)){
+      const satir=s=>[esc(s.label), yuzde(s.p1,1), yuzde(s.p2,1), `<span class="delta ${s.fark>0?'up':'down'}">${s.fark>0?'▲ +':'▼ '}${sayi(100*s.fark,1)} puan</span>`];
+      h+=panel('Konuların payındaki değişim', `${D.d1} ile ${D.d2} dönemleri karşılaştırıldı; en az 5 yayını olan konular.`,
+        `<div class="grid2"><div><h3 style="font-size:14px;margin-bottom:6px">Payı artanlar</h3>${D.yukselen.length?tablo([{b:'Konu'},{b:D.d1,n:1},{b:D.d2,n:1},{b:'Değişim',n:1}],D.yukselen.map(satir)):'<p class="ph">Belirgin artış yok.</p>'}</div>
+         <div><h3 style="font-size:14px;margin-bottom:6px">Payı azalanlar</h3>${D.gerileyen.length?tablo([{b:'Konu'},{b:D.d1,n:1},{b:D.d2,n:1},{b:'Değişim',n:1}],D.gerileyen.map(satir)):'<p class="ph">Belirgin azalış yok.</p>'}</div></div>`);
+    }
+  }
+  if(M.anahtar.length){
+    h+=panel('En sık anahtar kelimeler', oa?'OpenAlex\'in yayın metninden çıkardığı anahtar kelimeler.':'Yazarların belirttiği anahtar kelimeler.',
+      `<div class="kw">${M.anahtar.slice(0,24).map(k=>`<span>${esc(k.label)}<i>${sayi(k.n)}</i></span>`).join('')}</div>`);
+  }
+  h+=`</section>`;
+
+  /* --- aktörler --- */
+  bol.push(['b-aktor','Aktörler']);
+  const ya=M.yazarlar;
+  let akt = ya.length? `En üretken yazar <strong>${esc(ya[0].label)}</strong> (${sayi(ya[0].n)} yayın).` : '';
+  if(M.kurumlar.length) akt+=` En üretken kurum <strong>${esc(M.kurumlar[0].label)}</strong>.`;
+  if(M.uluslararasi!=null && oa) akt+=` Yayınların ${yuzde(M.uluslararasi)}'i birden fazla ülkeden yazarların ortak çalışması.`;
+  h+=`<section class="sec" id="b-aktor"><h2>Kimler öne çıkıyor?</h2><p class="ans">${akt}</p>`;
+  if(ya.length){
+    const idli=R.some(r=>r.authorIds&&r.authorIds.some(Boolean));
+    h+=panel('En üretken yazarlar', `Kesirli sayımda çok yazarlı bir yayın, yazarlar arasında paylaştırılır; ortak yayını çok olan yazarların öne çıkmasını dengeler.${idli?' Yazarlar OpenAlex kimlikleriyle ayırt edildi.':' Yazarlar ad yazımına göre eşleştirildi; aynı kişinin farklı yazımları ayrı sayılabilir.'}`,
+      tablo([{b:'#',n:1},{b:'Yazar'},{b:'Yayın',n:1},{b:'Kesirli sayım',n:1},{b:'Atıf',n:1}], ya.slice(0,15).map((a,i)=>[i+1,esc(a.label),sayi(a.n),sayi(a.frac,2),sayi(a.cited)])));
+  }
+  if(M.kurumlar.length||M.ulkeler.length){
+    h+=`<div class="grid2">`;
+    if(M.kurumlar.length) h+=panel('En üretken kurumlar','Tam sayım: bir yayın, yazarlarının bağlı olduğu her kuruma bir kez sayılır.', kanvas('chKurum')+detay(tablo([{b:'Kurum'},{b:'Yayın',n:1},{b:'Kesirli',n:1}],M.kurumlar.slice(0,25).map(k=>[esc(k.label),sayi(k.n),sayi(k.frac,2)]))));
+    if(M.ulkeler.length) h+=panel('Ülkeler','Yazarların bağlı olduğu kurumların ülkeleri.', kanvas('chUlke')+detay(tablo([{b:'Ülke'},{b:'Yayın',n:1},{b:'Kesirli',n:1}],M.ulkeler.slice(0,25).map(k=>[esc(ulkeAdi(k.label)),sayi(k.n),sayi(k.frac,2)]))));
+    h+=`</div>`;
+  }
+  h+=`</section>`;
+
+  /* --- yayın yerleri --- */
+  if(M.dergiler.length && meta.mod!=='dergi' || M.dergiler.length>1){
+    bol.push(['b-dergi','Dergiler']);
+    const B=M.bradford;
+    let der=`Yayınlar <strong>${sayi(M.dergiler.length)}</strong> farklı dergide yer alıyor.`;
+    if(B && B.toplamDergi>3) der+=` Yayınların ${yuzde(B.pay)}'i yalnızca <strong>${sayi(B.cekirdek.length)} çekirdek dergide</strong> toplanıyor.`;
+    h+=`<section class="sec" id="b-dergi"><h2>Nerede yayımlanıyor?</h2><p class="ans">${der}</p>
+      ${panel('En çok yayın yapılan dergiler', B&&B.toplamDergi>3?'Çekirdek dergiler Bradford yasasıyla belirlendi: dergiler üretkenliğe göre sıralanır, yayınların ilk üçte birini taşıyanlar çekirdeği oluşturur.':'', kanvas('chDergi')+detay(tablo([{b:'Dergi'},{b:'Yayın',n:1},{b:'Bradford',n:1}],M.dergiler.slice(0,30).map((d,i)=>[esc(d.label),sayi(d.n),B&&i<B.cekirdek.length?'çekirdek':'']))))}</section>`;
+  }
+
+  /* --- etki --- */
+  bol.push(['b-etki','Etki']);
+  let etk=`Yayınların ${yuzde(M.atifsiz)}'i henüz hiç atıf almamış.`;
+  if(fwVar && M.fwciUstu!=null) etk=`Yayınların ${yuzde(M.fwciUstu)}'i kendi alanının dünya ortalamasından fazla atıf almış. `+etk;
+  h+=`<section class="sec" id="b-etki"><h2>En çok etki yaratan yayınlar</h2><p class="ans">${etk}</p>
+    ${panel('', fwVar?'FWCI, bir yayının atıflarını aynı alan, yıl ve türdeki yayınların ortalamasıyla karşılaştırır. Ham atıf sayısı eski yayınları kayırır; FWCI bu yanlılığı azaltır.':'Atıf sayıları veri kaynağından alındığı haliyle gösterilmiştir.',
+      tablo([{b:'#',n:1},{b:'Yayın'},{b:'Yıl',n:1},{b:'Atıf',n:1}].concat(fwVar?[{b:'FWCI',n:1}]:[]),
+        M.enCokAtif.map((r,i)=>{ const t=r.doi?`<a href="https://doi.org/${esc(r.doi)}" target="_blank" rel="noopener">${esc(r.title)}</a>`:esc(r.title);
+          const row=[i+1, `${t}<br><small style="color:var(--muted)">${esc(kisalt((r.authors||[]).slice(0,3).join(', ')+((r.authors||[]).length>3?' vd.':''),80))}${r.journal?' · '+esc(r.journal):''}</small>`, r.year||'', sayi(r.cited)];
+          if(fwVar) row.push(r.fwci!=null?sayi(r.fwci,2):'–'); return row; })))}</section>`;
+
+  /* --- yöntem --- */
+  bol.push(['b-yontem','Yöntem']);
+  const yt=yontemMetni(M, meta, {konuVar, fwVar, oa});
+  const sinir=sinirliliklar(M, meta, {oa, konuVar});
+  h+=`<section class="sec method" id="b-yontem"><h2>Yöntem ve sınırlılıklar</h2>
+    <p class="ans">Aşağıdaki paragrafı makalenizin yöntem bölümüne uyarlayabilirsiniz.</p>
+    ${panel('Yöntem paragrafı','', `<p id="ytMetin">${esc(yt)}</p><button class="btn alt sm" id="ytKopya">Metni kopyala</button><span class="copy-ok" id="ytOk" aria-live="polite"></span>`)}
+    ${panel('Sınırlılıklar','Raporu yorumlarken ve makalenizde belirtmeniz önerilen noktalar.', `<ul>${sinir.map(s=>`<li>${s}</li>`).join('')}</ul>`)}
+    ${meta.url?panel('Tekrarlanabilirlik','Bu sorguyu aynı ölçütlerle yeniden çalıştırmak için kullanılan OpenAlex adresi. Veri tabanı sürekli güncellendiğinden sonuçlar zamanla küçük farklar gösterebilir.', `<code class="q">${esc(meta.url)}</code>`):''}
+    ${panel('Kaynak','', `<p style="font-size:14px">Priem, J., Piwowar, H. ve Orr, R. (2022). <i>OpenAlex: A fully-open index of scholarly works, authors, venues, institutions, and concepts</i>. arXiv. https://doi.org/10.48550/arXiv.2205.01833</p>`)}
+    <p class="help no-print">Ağ analizleri, LLM ile tematik sınıflandırma ve Altın Standart doğrulaması için bu veri setini <a href="uzman.html">uzman modunda açabilirsiniz</a>.</p>
+  </section>`;
+
+  /* içindekiler başlığın hemen altına */
+  const toc=`<nav class="toc" aria-label="Rapor bölümleri"><a href="#b-ozet">Özet</a>${bol.map(([id,ad])=>`<a href="#${id}">${ad}</a>`).join('')}</nav>`;
+  h=h.replace('<section class="sec" id="b-ozet"', toc+'<section class="sec" id="b-ozet"');
+  $('rapor').innerHTML=h;
+  adim(3,false); // grafikler görünür kapta çizilmeli; gizli kapta boyutları sıfır olur
+
+  /* --- grafikler --- */
+  if(M.seri.length) cizYillar($('chYil'), M);
+  if(konuVar) cizYatay($('chKonu'), M.konular.slice(0,12), 'yayın', TEAL);
+  if($('chKurum')) cizYatay($('chKurum'), M.kurumlar.slice(0,10), 'yayın');
+  if($('chUlke')) cizYatay($('chUlke'), M.ulkeler.slice(0,10).map(u=>({label:ulkeAdi(u.label),n:u.n})), 'yayın', TEAL);
+  if($('chDergi')) cizYatay($('chDergi'), M.dergiler.slice(0,12), 'yayın');
+  [['chYil','Yıllara göre yayın sayısı grafiği'],['chKonu','En sık konular grafiği'],['chKurum','En üretken kurumlar grafiği'],['chUlke','Ülkeler grafiği'],['chDergi','Dergiler grafiği']].forEach(([id,a])=>{ if($(id)) $(id).setAttribute('aria-label',a+'; değerler altındaki tabloda.'); });
+
+  /* --- düğmeler --- */
+  $('pdfBtn').onclick=()=>window.print();
+  $('csvBtn').onclick=()=>csvIndir(R, meta);
+  $('yeniBtn').onclick=()=>{ resumeGoster(); git(1); };
+  $('ytKopya').onclick=async()=>{ try{ await navigator.clipboard.writeText(yt); $('ytOk').textContent='Kopyalandı'; }catch(_){ $('ytOk').textContent='Kopyalanamadı; metni seçip kopyalayın'; } setTimeout(()=>$('ytOk').textContent='',2500); };
+  aiKartCiz();
+}
+
+/* ================= yöntem metni ve sınırlılıklar ================= */
+function yontemMetni(M, meta, {konuVar, fwVar, oa}){
+  const tarih = meta.tarih? new Date(meta.tarih).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '';
+  let t='';
+  if(meta.mod==='dosya'){
+    t=`Veriler ${listeMetni((meta.dosyalar||[]).map(d=>'“'+d+'”'))} ${ (meta.dosyalar||[]).length>1?'dosyalarından':'dosyasından'} içe aktarılmıştır. ${meta.mukerrer? `Aktarılan ${sayi(meta.okunan)} kayıttan DOI ve başlık eşleşmesiyle ${sayi(meta.mukerrer)} yinelenen kayıt ayıklanmış ve analiz ${sayi(M.N)} kayıt üzerinde yürütülmüştür.` : `Aktarılan ${sayi(M.N)} kaydın tamamı analize alınmıştır.`}`;
+  } else if(meta.mod==='uzman' || !meta.kapsam){
+    t=`Analiz, BiblioLab TR uzman modunda oluşturulan ${sayi(M.N)} kayıtlık veri seti üzerinde yürütülmüştür.`;
+  } else {
+    t=`Veriler ${tarih} tarihinde açık bibliyografik veri tabanı OpenAlex'in (Priem, Piwowar ve Orr, 2022) programlama arayüzü aracılığıyla çekilmiştir. ${meta.kapsam} Sorgu ${sayi(meta.bulunan)} kayıt döndürmüştür`;
+    if(meta.kesik) t+=`; bunlardan en çok atıf alan ${sayi(meta.alinan)} kayıt analize alınmıştır`;
+    t+= meta.mukerrer? `. DOI ve başlık eşleşmesiyle ${sayi(meta.mukerrer)} yinelenen kayıt ayıklanmış ve analiz ${sayi(M.N)} kayıt üzerinde yürütülmüştür.` : ` ve analiz bu kayıtların tamamı (${sayi(M.N)}) üzerinde yürütülmüştür.`;
+  }
+  t+=' Yayın eğilimi, tamamlanmış yıllardaki yıllık yayın sayılarına uydurulan log-doğrusal modelle incelenmiştir.';
+  if(M.dergiler.length>3) t+=' Dergi yoğunlaşması Bradford yasasıyla belirlenmiştir.';
+  const birim=['yazar']; if(M.kurumlar.length) birim.push('kurum'); if(M.ulkeler.length&&oa) birim.push('ülke');
+  t+=` ${listeMetni(birim).replace(/^./,c=>c.toLocaleUpperCase('tr'))} üretkenliği tam ve kesirli sayımla hesaplanmıştır.`;
+  if(konuVar) t+=` Tematik yapı OpenAlex konu sınıflandırması üzerinden, konuların payındaki değişim ise dönemin ilk ve ikinci yarısı karşılaştırılarak belirlenmiştir.`;
+  t+= fwVar? ` Atıf etkisi ham atıf sayılarının yanı sıra alan, yıl ve yayın türüne göre normalleştirilmiş atıf etkisi (FWCI) ve h-indeksi ile değerlendirilmiştir.` : ` Atıf etkisi ham atıf sayıları ve h-indeksi ile değerlendirilmiştir.`;
+  t+=` Analizler BiblioLab TR (sürüm ${BIBLIOLAB_SURUM}) ile gerçekleştirilmiştir.`;
+  return t;
+}
+function sinirliliklar(M, meta, {oa, konuVar}){
+  const s=[];
+  if(oa) s.push('OpenAlex kapsamı geniş olmakla birlikte eksiksiz değildir; bazı ulusal dergiler ve eski sayılar dizinde yer almayabilir. Önemli dergilerinizin kapsandığını örnek kayıtlarla kontrol edin.');
+  if(meta.kesik) s.push(`Sorgu ${sayi(meta.bulunan)} kayıt döndürdüğü için yalnızca en çok atıf alan ${sayi(meta.alinan)} kayıt incelendi. Bu seçki etkili yayınlara doğru yanlıdır; büyüme ve konu dağılımı alanın tamamını yansıtmaz.`);
+  if(M.sonYilEksik) s.push(`${M.buYil} yılı henüz tamamlanmadığından büyüme hesabına katılmadı.`);
+  s.push('Atıf sayıları zamanla birikir: son yıllarda yayımlanan çalışmalar, etkileri henüz tam ortaya çıkmadığı için düşük atıf almış görünür.');
+  if(M.N<50) s.push('Veri seti küçük olduğundan oranlar ve eğilimler birkaç yayındaki değişimden kolayca etkilenir.');
+  if(konuVar) s.push('Konu etiketleri OpenAlex tarafından otomatik atanır; belirli yayınlarda hatalı olabilir.');
+  if(meta.mod==='konu') s.push('Anahtar ifadeyle yapılan arama, konuyu farklı terimlerle anlatan yayınları kaçırabilir ve ifadeyi başka anlamda kullanan yayınları içerebilir. En çok atıf alan yayınlar listesini ilgisiz kayıtlar açısından gözden geçirin.');
+  if(meta.mod==='kisi' && meta.kisiTur==='authors') s.push('Yazar profilleri OpenAlex\'in otomatik ad ayrıştırmasına dayanır; bazı yayınlar başka bir profile atanmış olabilir.');
+  const dusuk=Object.entries(M.doluluk).filter(([,v])=>v<.7).map(([k,v])=>`${k.toLocaleLowerCase('tr')} (${yuzde(v)})`);
+  if(dusuk.length) s.push(`Bazı alanlarda veri eksik: ${listeMetni(dusuk)} doluluk oranında. Bu alanlara dayanan bulgular kısmi veriyi yansıtır.`);
+  return s;
+}
+
+/* ================= yapay zekâ yorumu ================= */
+const YORUM_ISTEM = 'Sen bibliyometri alanında deneyimli bir araştırmacısın. Aşağıdaki ölçümler, bibliyometriye yeni başlayan bir akademisyen ya da doktora öğrencisi için hazırlanan bir raporun özet bölümüne girecek. Türkçe, sade ve akademik bir dille en fazla üç kısa paragraf yaz: (1) alanın genel görünümü ve zaman içindeki gelişimi, (2) öne çıkan konular, aktörler ve yayın yerleri, (3) bu görünümün araştırmacıya düşündürdüğü olası çalışma yönleri. Kurallar: yalnızca verilen sayılara dayan ve sayı uydurma; nedensel iddialardan kaçın; başlık, madde işareti ve uzun tire kullanma; gerekiyorsa verinin sınırlılığını tek cümleyle belirt.';
+function yorumHTML(t){ return esc(t).split(/\n\s*\n/).map(p=>`<p>${p.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,' ')}</p>`).join(''); }
+async function aiKartCiz(yeniden=false){
+  const k=$('aiKart'); if(!k) return;
+  if(!llmHazir()){
+    k.className='ai off';
+    k.innerHTML=`<h3>Yapay zekâ yorumu</h3><p>Bulguların sade dilde yorumunu görmek için bir Gemini API anahtarı ekleyin. Anahtar ücretsizdir ve yalnızca bu tarayıcıda saklanır.</p><button class="btn alt sm" id="aiAyar">Anahtar ekle</button>`;
+    $('aiAyar').onclick=ayarAc; return;
+  }
+  k.className='ai';
+  if(ST.yorum && !yeniden){ k.innerHTML=`<h3>Yapay zekâ yorumu <small>${esc(LLM_MODEL)}</small></h3>${yorumHTML(ST.yorum)}${aiFoot()}`; $('aiYeni').onclick=()=>aiKartCiz(true); return; }
+  k.innerHTML=`<h3>Yapay zekâ yorumu</h3><p class="wait">Bulgular yorumlanıyor…</p>`;
+  try{
+    const out=await callLLM([{role:'user',content:YORUM_ISTEM+'\n\n---\n'+llmBaglam(ST.recs, ST.M, ST.meta)}]);
+    ST.yorum=out; if(ST.meta){ ST.meta.yorum=out; korpusKaydet(ST.recs, ST.meta); }
+    k.innerHTML=`<h3>Yapay zekâ yorumu <small>${esc(LLM_MODEL)}</small></h3>${yorumHTML(out)}${aiFoot()}`;
+    $('aiYeni').onclick=()=>aiKartCiz(true);
+  }catch(e){
+    k.innerHTML=`<h3>Yapay zekâ yorumu</h3><p class="note err">${esc(e.message)}</p><button class="btn alt sm" id="aiTekrar" style="margin-top:10px">Tekrar dene</button>`;
+    $('aiTekrar').onclick=()=>aiKartCiz(true);
+  }
+}
+const aiFoot=()=>`<div class="foot"><span>Yapay zekâ çıktısıdır; yukarıdaki sayılarla karşılaştırarak kullanın.</span><button class="btn ghost sm" id="aiYeni">Yeniden yorumla</button></div>`;
+
+/* ================= dışa aktarım ================= */
+function csvIndir(R, meta){
+  const rows=R.map(r=>({baslik:r.title,yazarlar:r.authors.join('; '),yil:r.year,dergi:r.journal,tur:r.type||'',
+    anahtar_kelimeler:(r.keywords||[]).join('; '),konu:r.topic||'',alt_alan:r.subfield||'',ozet:r.abstract,atif:r.cited,fwci:r.fwci??'',acik_erisim:r.oa==null?'':(r.oa?'evet':'hayır'),
+    kurumlar:(r.insts||[]).join('; '),ulkeler:(r.countries||[]).join('; '),doi:r.doi,dil:r.lang,openalex_id:r.oaid||'',kaynak:r.src}));
+  const ad=(meta&&meta.baslik? meta.baslik : 'bibliolab').toLocaleLowerCase('tr').replace(/[^a-z0-9çğıöşü]+/gi,'_').replace(/^_|_$/g,'').slice(0,50)||'bibliolab';
+  dl(`bibliolab_${ad}.csv`,String.fromCharCode(0xFEFF)+Papa.unparse(rows),'text/csv;charset=utf-8');
+}
+
+/* ================= ayarlar ================= */
+function ayarAc(){
+  $('kGem').value=llmAnahtar(); $('kOA').value=oaKey();
+  $('ayarDlg').showModal();
+}
+$('ayarAc').addEventListener('click',ayarAc);
+$('ayarDlg').addEventListener('close',()=>{
+  if($('ayarDlg').returnValue!=='kaydet') return;
+  try{
+    const g=norm($('kGem').value), o=norm($('kOA').value);
+    g? localStorage.setItem('bl_key',g) : localStorage.removeItem('bl_key');
+    o? localStorage.setItem('bl_oa_key',o) : localStorage.removeItem('bl_oa_key');
+  }catch(_){}
+  if($('s3').classList.contains('on')) aiKartCiz();
+});
+
+/* ================= başlangıç ================= */
+(async function(){
+  await resumeGoster();
+  if(location.hash==='#rapor'){
+    const d=await korpusOku();
+    if(d){ ST.recs=d.recs; ST.meta=d.meta||{mod:'uzman',tarih:new Date(d.saved).toISOString(),baslik:'Uzman modunda oluşturulan korpus'}; ST.yorum=(d.meta&&d.meta.yorum)||null; raporCiz(); adim(3,false); return; }
+  }
+  history.replaceState(null,'',location.pathname+location.search);
+  adim(1,false);
+})();
 </script>
 <script src="imza.js" defer></script>
 </body>
