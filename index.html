@@ -12,9 +12,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --ink:#1B2A41; --ink-soft:#33415C; --paper:#EFF2F6; --card:#FFFFFF;
-  --hl:#FFD34D; --hl-soft:#FFF4C9; --teal:#2E6E5E; --teal-soft:#E3EFEB; --brick:#A44A3F; --muted:#68738A;
-  --line:#D7DDE7; --grid:#E6EAF0; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif; --disp:'Fraunces',serif;
+  --ink:#0E4A55; --ink-soft:#2F5A63; --paper:#F3F6F5; --card:#FFFFFF;
+  --hl:#F2A541; --hl-soft:#FDEFD6; --teal:#1E6F6B; --teal-soft:#E2F0EE; --brick:#A44A3F; --muted:#5F7378;
+  --line:#D5DFDD; --grid:#E5ECEA; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif; --disp:'Fraunces',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none !important}
@@ -29,9 +29,9 @@ button{font:inherit}
 header{background:var(--ink);color:#fff;border-bottom:6px solid var(--hl)}
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:18px;padding-bottom:16px;flex-wrap:wrap}
 .brand{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:-.01em;color:#fff;text-decoration:none}
-.brand em{font-style:normal;background:linear-gradient(transparent 55%,var(--hl) 55%,var(--hl) 92%,transparent 92%);color:var(--ink);padding:0 5px;margin-left:2px;border-radius:2px}
+.brand em{font-style:normal;background:var(--hl);color:var(--ink);padding:0 6px 1px;margin-left:2px;border-radius:4px}
 .top-actions{display:flex;gap:6px;align-items:center}
-.top-actions a,.top-actions button{appearance:none;border:0;background:none;color:#B8C2D6;font-size:14px;font-weight:500;padding:8px 10px;border-radius:6px;cursor:pointer;text-decoration:none}
+.top-actions a,.top-actions button{appearance:none;border:0;background:none;color:#BFD6D9;font-size:14px;font-weight:500;padding:8px 10px;border-radius:6px;cursor:pointer;text-decoration:none}
 .top-actions a:hover,.top-actions button:hover{color:#fff;background:rgba(255,255,255,.08)}
 .top-actions :focus-visible{outline:2px solid var(--hl);outline-offset:1px}
 
@@ -58,7 +58,7 @@ h2.q:focus,h1.q:focus{outline:none}
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:720px){.choices{grid-template-columns:1fr}}
 .choice{appearance:none;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:22px 22px 20px;cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:4px 16px;align-items:start;transition:border-color .15s,box-shadow .15s,transform .15s}
-.choice:hover{border-color:var(--ink);box-shadow:0 6px 18px rgba(27,42,65,.08);transform:translateY(-1px)}
+.choice:hover{border-color:var(--ink);box-shadow:0 6px 18px rgba(14,74,85,.08);transform:translateY(-1px)}
 .choice:focus-visible{outline:3px solid var(--hl);outline-offset:2px;border-color:var(--ink)}
 .choice .ic{grid-row:span 2;width:44px;height:44px;border-radius:10px;background:var(--hl-soft);display:grid;place-items:center;color:var(--ink)}
 .choice b{font-size:17px;font-weight:600}
@@ -107,7 +107,7 @@ input:focus{outline:3px solid var(--hl-soft);border-color:var(--ink)}
 
 /* otomatik tamamlama */
 .ac{position:relative}
-.ac ul{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);list-style:none;background:#fff;border:1.5px solid var(--ink);border-radius:8px;box-shadow:0 10px 24px rgba(27,42,65,.12);max-height:340px;overflow-y:auto;display:none}
+.ac ul{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);list-style:none;background:#fff;border:1.5px solid var(--ink);border-radius:8px;box-shadow:0 10px 24px rgba(14,74,85,.12);max-height:340px;overflow-y:auto;display:none}
 .ac ul.on{display:block}
 .ac li{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--grid)}
 .ac li:last-child{border-bottom:0}
@@ -116,10 +116,10 @@ input:focus{outline:3px solid var(--hl-soft);border-color:var(--ink)}
 .ac li small{color:var(--muted);font-size:12.5px}
 .ac li.note{cursor:default;color:var(--muted);font-size:13.5px;background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.chip{display:inline-flex;align-items:center;gap:6px;background:var(--hl-soft);border:1px solid #E9D48A;border-radius:999px;padding:5px 6px 5px 12px;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--hl-soft);border:1px solid #EFC98A;border-radius:999px;padding:5px 6px 5px 12px;font-size:14px}
 .chip small{color:var(--muted);font-size:12px}
 .chip button{appearance:none;border:0;background:none;width:22px;height:22px;border-radius:50%;cursor:pointer;color:var(--ink-soft);font-size:16px;line-height:1}
-.chip button:hover{background:rgba(27,42,65,.1)}
+.chip button:hover{background:rgba(14,74,85,.1)}
 
 /* dosya bırakma alanı */
 .drop{border:2px dashed var(--line);border-radius:10px;padding:34px 20px;text-align:center;background:var(--paper);cursor:pointer;transition:border-color .15s,background .15s}
@@ -201,8 +201,8 @@ code.q{display:block;font-family:var(--mono);font-size:12.5px;background:var(--p
 .copy-ok{font-size:13px;color:var(--teal);margin-left:6px}
 
 /* ayarlar */
-dialog{border:0;border-radius:12px;padding:0;max-width:560px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(27,42,65,.3);color:var(--ink)}
-dialog::backdrop{background:rgba(27,42,65,.45)}
+dialog{border:0;border-radius:12px;padding:0;max-width:560px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(14,74,85,.3);color:var(--ink)}
+dialog::backdrop{background:rgba(14,74,85,.45)}
 .dlg{padding:24px}
 .dlg h2{font-family:var(--disp);font-size:22px;margin-bottom:4px}
 .dlg .lead{font-size:14px;margin-bottom:18px}
@@ -417,7 +417,7 @@ footer .wrap{display:flex;flex-direction:column;gap:4px}
 /* ================= durum ================= */
 const ST = { mod:null, kisiTur:'authors', filtre:null, onizleme:null, recs:[], meta:null, yorum:null };
 const BU_YIL = new Date().getFullYear();
-const INK='#1B2A41', TEAL='#2E6E5E', GRAY='#A9B2C3';
+const INK='#0E4A55', TEAL='#1E6F6B', GRAY='#A9B2C3';
 
 /* ================= adımlar ve gezinme ================= */
 function adim(n, odak=true){
@@ -669,8 +669,8 @@ async function dosyaOku(files){
 }
 
 /* ================= rapor ================= */
-Chart.defaults.font.family="'IBM Plex Sans',sans-serif"; Chart.defaults.font.size=12; Chart.defaults.color='#68738A';
-Chart.defaults.plugins.tooltip.backgroundColor='#1B2A41'; Chart.defaults.plugins.tooltip.padding=10; Chart.defaults.plugins.tooltip.cornerRadius=6;
+Chart.defaults.font.family="'IBM Plex Sans',sans-serif"; Chart.defaults.font.size=12; Chart.defaults.color='#5F7378';
+Chart.defaults.plugins.tooltip.backgroundColor='#0E4A55'; Chart.defaults.plugins.tooltip.padding=10; Chart.defaults.plugins.tooltip.cornerRadius=6;
 Chart.defaults.plugins.tooltip.titleFont={weight:'600'}; Chart.defaults.plugins.tooltip.displayColors=false;
 let CHARTS=[];
 const kisalt=(s,n=42)=> s.length>n? s.slice(0,n-1)+'…' : s;
@@ -680,7 +680,7 @@ function cizYatay(cv, items, birim, renk=INK){
   CHARTS.push(new Chart(cv,{type:'bar',
     data:{labels:items.map(i=>kisalt(i.label, cv.parentElement.clientWidth<520?22:42)), datasets:[{data:items.map(i=>i.n), backgroundColor:renk, borderRadius:4, borderSkipped:'start', maxBarThickness:20, categoryPercentage:.8}]},
     options:{indexAxis:'y',maintainAspectRatio:false,responsive:true,layout:{padding:{left:4}},
-      scales:{x:{beginAtZero:true,grid:{color:'#E6EAF0'},border:{display:false},ticks:{precision:0,callback:v=>sayi(v)}},y:{grid:{display:false},border:{color:'#D7DDE7'},ticks:{color:'#33415C',font:{size:12.5}}}},
+      scales:{x:{beginAtZero:true,grid:{color:'#E5ECEA'},border:{display:false},ticks:{precision:0,callback:v=>sayi(v)}},y:{grid:{display:false},border:{color:'#D5DFDD'},ticks:{color:'#2F5A63',font:{size:12.5}}}},
       plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>items[c[0].dataIndex].label,label:c=>sayi(c.raw)+' '+birim}}}}}));
 }
 function cizYillar(cv, M){
@@ -689,7 +689,7 @@ function cizYillar(cv, M){
   CHARTS.push(new Chart(cv,{type:'bar',
     data:{labels:seri.map(([y])=>String(y)), datasets:[{data:seri.map(([,n])=>n), backgroundColor:seri.map(([y])=>y===M.buYil?GRAY:INK), borderRadius:4, borderSkipped:'start', maxBarThickness:24, categoryPercentage:.85}]},
     options:{maintainAspectRatio:false,responsive:true,
-      scales:{y:{beginAtZero:true,grid:{color:'#E6EAF0'},border:{display:false},ticks:{precision:0,callback:v=>sayi(v)}},x:{grid:{display:false},border:{color:'#D7DDE7'},ticks:{autoSkip:true,maxRotation:0}}},
+      scales:{y:{beginAtZero:true,grid:{color:'#E5ECEA'},border:{display:false},ticks:{precision:0,callback:v=>sayi(v)}},x:{grid:{display:false},border:{color:'#D5DFDD'},ticks:{autoSkip:true,maxRotation:0}}},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sayi(c.raw)+' yayın'+(seri[c.dataIndex][0]===M.buYil?' (yıl sürüyor)':'')}}}}}));
 }
 function tablo(kolonlar, satirlar){
